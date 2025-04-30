@@ -23,6 +23,35 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    // проверяем наличие всех параметров
+    if (!email || !password) {
+        return res.status(400).json({ 
+            error: 'Необходимо указать email и password' 
+        });
+    }
+
+    // проверяем учетные данные
+    db.get('SELECT * FROM users WHERE email = ? AND password = ?', 
+        [email, password], 
+        (err, row) => {
+            if (err) {
+                return res.status(500).json({ error: 'Ошибка при проверке учетных данных' });
+            }
+
+            if (!row) {
+                return res.status(401).json({ error: 'Неверные учетные данные' });
+            }
+
+            res.status(200).json({
+                message: 'Успешный вход в систему'
+            });
+        }
+    );
+});
+
 // эндпоинт для перевода денег
 app.post('/api/transfer', (req, res) => {
     const { fromAccountId, toAccountId, amount } = req.body;
