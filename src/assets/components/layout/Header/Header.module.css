@@ -1,0 +1,46 @@
+.header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 0;
+  margin-bottom: 30px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon {
+  color: #333; /* Цвет иконок */
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.bellIcon {
+  font-size: 24px;
+}
+
+.avatar {
+  font-size: 40px;
+  color: #6CCB9C; /* Зеленый цвет как в дизайне */
+}
+
+.icon:hover {
+  transform: scale(1.1);
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .bellIcon {
+    font-size: 20px;
+  }
+  
+  .avatar {
+    font-size: 32px;
+  }
+  
+  .userInfo {
+    gap: 15px;
+  }
+}

@@ -1,0 +1,212 @@
+/* Общие стили */
+.container {
+    position: relative;
+    padding: 40px;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: url('background-pattern.png') no-repeat center center / cover;
+}
+
+.profileCard {
+    max-width: 400px;
+    width: 100%;
+    padding: 40px;
+    background: white;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.avatarContainer {
+    position: relative;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.editIcon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    color: #FF6B35;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.editIcon:hover {
+    transform: scale(1.1);
+    background: #FF6B35;
+    color: white;
+}
+
+.infoBlock {
+    margin: 20px 0;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.infoBlock span {
+    color: #27AE60;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+    font-weight: 500;
+}
+
+.infoBlock p {
+    font-size: 16px;
+    color: #333;
+}
+
+/* Стили для кнопок */
+.actionButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.actionButton {
+    width: 100%;
+    padding: 15px;
+    background: #FF6B35;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    font-size: 16px;
+}
+
+.actionButton:hover {
+    background: #e05a2b;
+}
+
+.buttonIcon {
+    margin-right: 10px;
+}
+
+.logoutLink {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    color: #666;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.2s;
+}
+
+.logoutLink:hover {
+    color: #333;
+}
+
+.arrowIcon {
+    margin-right: 5px;
+}
+
+/* Медиа-запросы (адаптивность) */
+@media (max-width: 768px) {
+    .container {
+        padding: 30px;
+    }
+
+    .profileCard {
+        padding: 30px;
+    }
+
+    .avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .editIcon {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+    }
+
+    .profileCard {
+        padding: 20px;
+    }
+
+    .infoBlock {
+        margin: 15px 0;
+    }
+
+    .actionButton {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .logoutLink {
+        bottom: 20px;
+        left: 20px;
+    }
+}
+
+@media (max-width: 320px) {
+    .container {
+        padding: 15px;
+    }
+
+    .profileCard {
+        padding: 15px;
+        max-width: 280px;
+    }
+
+    .avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    .infoBlock span {
+        font-size: 12px;
+    }
+
+    .infoBlock p {
+        font-size: 14px;
+    }
+
+    .actionButton {
+        padding: 10px;
+        font-size: 12px;
+    }
+}

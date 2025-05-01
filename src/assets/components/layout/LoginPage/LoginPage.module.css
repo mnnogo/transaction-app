@@ -1,0 +1,41 @@
+/* Общие стили страницы */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('background-pattern.png') no-repeat center center / cover;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+}
+
+.rightSection {
+    flex: 0 1 50%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 40px 20px;
+    }
+
+    .rightSection {
+        flex: none;
+        width: 100%;
+        padding-top: 20px;
+    }
+}
+
+@media (max-width: 320px) {
+    .container {
+        padding: 20px 10px;
+    }
+}

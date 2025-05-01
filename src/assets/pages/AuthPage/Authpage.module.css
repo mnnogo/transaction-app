@@ -1,0 +1,9 @@
+
+  .authContainer {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('./background-pattern.png') no-repeat center center / cover;
+    min-height: 100vh;
+  }
+  
+  /* Остальные стили... */

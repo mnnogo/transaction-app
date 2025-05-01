@@ -1,0 +1,56 @@
+.card {
+    background: #6CCB9C;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .title {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+    opacity: 0.9;
+  }
+  
+  .amount {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .card {
+      padding: 15px;
+    }
+    
+    .title {
+      font-size: 13px;
+    }
+    
+    .amount {
+      font-size: 16px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .card {
+      padding: 12px;
+    }
+    
+    .title {
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    
+    .amount {
+      font-size: 15px;
+    }
+  }
