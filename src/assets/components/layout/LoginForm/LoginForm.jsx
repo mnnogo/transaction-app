@@ -15,7 +15,7 @@ const LoginForm = ({ setIsAuthenticated }) => {
     return re.test(email);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -39,20 +39,30 @@ const LoginForm = ({ setIsAuthenticated }) => {
 
     setIsLoading(true);
 
-    // Имитация асинхронного запроса
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // В реальном приложении здесь будет запрос к серверу
-      // Сейчас просто проверяем валидность формы
-      if (validateEmail(email) && password.length >= 6) {
-        setIsAuthenticated(true);
-        localStorage.setItem('authToken', 'fake-token-' + Date.now());
-        navigate('/dashboard');
-      } else {
-        setError('Форма заполнена неверно');
+    try {
+      const response = await fetch('http://localhost:5173/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка при входе в систему');
       }
-    }, 1000);
+
+      // успешный вход
+      setIsAuthenticated(true);
+      localStorage.setItem('authToken', 'token-' + Date.now());
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
