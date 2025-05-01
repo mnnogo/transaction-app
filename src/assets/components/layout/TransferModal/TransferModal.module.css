@@ -1,0 +1,166 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContainer {
+    max-width: 400px;
+    width: 90%;
+    padding: 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.transferForm h2 {
+    color: #27AE60;
+    margin-bottom: 25px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.customSelect, .amountInput {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.amountInput {
+    padding-right: 40px;
+}
+
+.customSelect:focus, .amountInput:focus {
+    outline: none;
+    border-color: #27AE60;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.cancelBtn {
+    flex: 1;
+    padding: 12px;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.cancelBtn:hover {
+    background: #e0e0e0;
+}
+
+.transferBtn {
+    flex: 1;
+    padding: 12px;
+    background: #27AE60;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.transferBtn:hover {
+    background: #219653;
+}
+
+.transferBtn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.errorMessage {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .modalContainer {
+        padding: 20px;
+    }
+    
+    .transferForm h2 {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+    }
+    
+    .formGroup {
+        margin-bottom: 15px;
+    }
+    
+    .customSelect, .amountInput {
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+    
+    .buttonGroup {
+        margin-top: 25px;
+    }
+}
+.successModal {
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .successWindow {
+    text-align: center;
+    padding: 30px;
+  }
+  
+  .successWindow h2 {
+    color: #27AE60;
+    margin-bottom: 30px;
+    font-size: 24px;
+  }
+  
+  .backBtn {
+    background: #27AE60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .backBtn:hover {
+    background: #219653;
+  }
