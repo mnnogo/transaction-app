@@ -23,16 +23,7 @@ export const getUserInfo = (email) => {
 export const getUserTransactions = (email) => {
     return new Promise((resolve, reject) => {
         db.all(`
-            SELECT 
-                CASE 
-                    WHEN t.from_account = a1.account_id THEN a2.account_id
-                    ELSE a1.account_id
-                END as account,
-                t.transaction_date,
-                CASE 
-                    WHEN t.from_account = a1.account_id THEN -t.sum
-                    ELSE t.sum
-                END as sum
+            SELECT t.from_account, t.to_account, t.transaction_date, t.sum
             FROM transactions t
             JOIN accounts a1 ON t.from_account = a1.account_id
             JOIN accounts a2 ON t.to_account = a2.account_id
