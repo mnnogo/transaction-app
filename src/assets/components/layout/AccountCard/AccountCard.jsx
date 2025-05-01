@@ -1,11 +1,14 @@
 import React from 'react';
 import styles from './AccountCard.module.css';
 
-const AccountCard = ({ accountName, balance }) => {
+const AccountCard = ({ name, balance, onClick, isSelected }) => {
   return (
-    <div className={styles.accountCard}>
-      <span className={styles.accountName}>{accountName}</span>
-      <strong className={styles.balance}>{balance}</strong>
+    <div 
+      className={`${styles.accountCard} ${isSelected ? styles.selected : ''}`}
+      onClick={onClick}
+    >
+      <h3>{name}</h3>
+      <p className={styles.balance}>{balance} ₽</p>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 /* Общие стили */
 .container {
     position: relative;
-    padding: 40px;
+    padding: 20px;
     width: 100%;
     min-height: 100vh;
     display: flex;
@@ -9,41 +9,43 @@
     align-items: center;
     justify-content: center;
     background: url('background-pattern.png') no-repeat center center / cover;
+    box-sizing: border-box;
 }
 
 .profileCard {
-    max-width: 400px;
+    max-width: 320px;
     width: 100%;
-    padding: 40px;
+    padding: 20px;
     background: white;
-    border-radius: 10px;
+    border-radius: 8px;
     text-align: center;
     position: relative;
     z-index: 1;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
 }
 
 .avatarContainer {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     display: inline-block;
 }
 
 .avatar {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .editIcon {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    width: 24px;
-    height: 24px;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -53,7 +55,8 @@
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 10px;
 }
 
 .editIcon:hover {
@@ -63,47 +66,48 @@
 }
 
 .infoBlock {
-    margin: 20px 0;
-    padding: 10px 0;
+    margin: 15px 0;
+    padding: 8px 0;
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
 }
 
 .infoBlock span {
     color: #27AE60;
-    font-size: 14px;
-    margin-bottom: 5px;
+    font-size: 12px;
+    margin-bottom: 4px;
     display: block;
     font-weight: 500;
 }
 
 .infoBlock p {
-    font-size: 16px;
+    font-size: 14px;
     color: #333;
+    margin: 4px 0;
 }
 
 /* Стили для кнопок */
 .actionButtons {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-top: 30px;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .actionButton {
     width: 100%;
-    padding: 15px;
+    padding: 10px;
     background: #FF6B35;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background 0.2s ease;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .actionButton:hover {
@@ -111,13 +115,14 @@
 }
 
 .buttonIcon {
-    margin-right: 10px;
+    margin-right: 8px;
+    font-size: 14px;
 }
 
 .logoutLink {
     position: absolute;
-    bottom: 40px;
-    left: 40px;
+    bottom: 20px;
+    left: 20px;
     color: #666;
     text-decoration: none;
     display: flex;
@@ -125,7 +130,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     transition: color 0.2s;
 }
 
@@ -134,55 +139,12 @@
 }
 
 .arrowIcon {
-    margin-right: 5px;
+    margin-right: 4px;
+    font-size: 14px;
 }
 
 /* Медиа-запросы (адаптивность) */
-@media (max-width: 768px) {
-    .container {
-        padding: 30px;
-    }
-
-    .profileCard {
-        padding: 30px;
-    }
-
-    .avatar {
-        width: 80px;
-        height: 80px;
-    }
-
-    .editIcon {
-        width: 20px;
-        height: 20px;
-    }
-}
-
 @media (max-width: 480px) {
-    .container {
-        padding: 20px;
-    }
-
-    .profileCard {
-        padding: 20px;
-    }
-
-    .infoBlock {
-        margin: 15px 0;
-    }
-
-    .actionButton {
-        padding: 12px;
-        font-size: 14px;
-    }
-
-    .logoutLink {
-        bottom: 20px;
-        left: 20px;
-    }
-}
-
-@media (max-width: 320px) {
     .container {
         padding: 15px;
     }
@@ -193,20 +155,36 @@
     }
 
     .avatar {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+@media (max-width: 320px) {
+    .container {
+        padding: 10px;
+    }
+
+    .profileCard {
+        padding: 12px;
+        max-width: 260px;
+    }
+
+    .avatar {
         width: 60px;
         height: 60px;
     }
 
     .infoBlock span {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .infoBlock p {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .actionButton {
-        padding: 10px;
+        padding: 8px;
         font-size: 12px;
     }
 }
