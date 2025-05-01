@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiEye,
+  FiEyeOff,
   FiPlus,
   FiArrowLeft,
 } from 'react-icons/fi';
@@ -12,21 +13,22 @@ import styles from './DashboardPage.module.css';
 
 const DashboardPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(true);
 
   const handleProfileClick = () => {
     navigate('/profile');
   };
 
   const balanceData = [
-    { title: 'Общий баланс', amount: '44,500.00' },
-    { title: 'Доходы', amount: '54,500.00' },
-    { title: 'Расходы', amount: '10,000.00' }
+    { title: 'Общий баланс', amount: isVisible ? '44,500.00' : '******' },
+    { title: 'Доходы', amount: isVisible ? '54,500.00' : '******' },
+    { title: 'Расходы', amount: isVisible ? '10,000.00' : '******' }
   ];
 
   const accountsData = [
-    { name: 'Главный счет', balance: '44,500.00' },
-    { name: 'На машину', balance: '44,500.00' },
-    { name: 'Отпускные', balance: '44,500.00' }
+    { name: 'Главный счет', balance: isVisible ? '44,500.00' : '******' },
+    { name: 'На машину', balance: isVisible ? '44,500.00' : '******' },
+    { name: 'Отпускные', balance: isVisible ? '44,500.00' : '******' }
   ];
 
   const handleLogout = () => {
@@ -44,8 +46,11 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>Общий вид</h2>
-              <button className={styles.eyeButton}>
-                <FiEye size={20} />
+              <button 
+                className={styles.eyeButton}
+                onClick={() => setIsVisible(!isVisible)}
+              >
+                {isVisible ? <FiEye size={20} /> : <FiEyeOff size={20} />}
               </button>
             </div>
             <div className={styles.balanceGrid}>
