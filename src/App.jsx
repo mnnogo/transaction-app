@@ -1,35 +1,33 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom'; // Добавили Navigate в импорт
+import AuthPage from './assets/pages/AuthPage/Authpage';
+import DashboardPage from './assets/pages/DashboardPage/DashboardPage';
+import ProfilePage from './assets/pages/ProfilePage/ProfilePage';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Routes>
+      <Route path="/" element={<AuthPage setIsAuthenticated={setIsAuthenticated} />} />
+      <Route 
+        path="/dashboard" 
+        element={
+          isAuthenticated 
+            ? <DashboardPage setIsAuthenticated={setIsAuthenticated} /> 
+            : <Navigate to="/" replace />
+        } 
+      />
+       <Route 
+        path="/profile" 
+        element={
+          isAuthenticated 
+            ? <ProfilePage setIsAuthenticated={setIsAuthenticated} /> 
+            : <Navigate to="/" replace />
+        } 
+      />
+    </Routes>
+  );
 }
 
-export default App
+export default App;
