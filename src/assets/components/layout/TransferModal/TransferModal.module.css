@@ -40,7 +40,22 @@
     font-weight: 500;
 }
 
-.customSelect, .amountInput {
+.customSelect {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+}
+
+.accountInput {
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #ddd;
@@ -51,12 +66,22 @@
 }
 
 .amountInput {
+    width: 100%;
+    padding: 12px 15px;
     padding-right: 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
 }
 
-.customSelect:focus, .amountInput:focus {
+.customSelect:focus, 
+.accountInput:focus,
+.amountInput:focus {
     outline: none;
     border-color: #27AE60;
+    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
 }
 
 .buttonGroup {
@@ -97,15 +122,22 @@
     background: #219653;
 }
 
-.transferBtn:disabled {
-    background: #cccccc;
+.transferBtn:disabled,
+.cancelBtn:disabled,
+.customSelect:disabled,
+.accountInput:disabled,
+.amountInput:disabled {
+    background: #f5f5f5;
+    color: #aaa;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .errorMessage {
     color: #e74c3c;
     font-size: 13px;
     margin-top: 5px;
+    text-align: center;
 }
 
 /* Адаптивность */
@@ -123,7 +155,9 @@
         margin-bottom: 15px;
     }
     
-    .customSelect, .amountInput {
+    .customSelect, 
+    .accountInput,
+    .amountInput {
         padding: 10px 12px;
         font-size: 15px;
     }
@@ -132,35 +166,3 @@
         margin-top: 25px;
     }
 }
-.successModal {
-    max-width: 400px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .successWindow {
-    text-align: center;
-    padding: 30px;
-  }
-  
-  .successWindow h2 {
-    color: #27AE60;
-    margin-bottom: 30px;
-    font-size: 24px;
-  }
-  
-  .backBtn {
-    background: #27AE60;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 12px 24px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .backBtn:hover {
-    background: #219653;
-  }
