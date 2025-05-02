@@ -31,7 +31,16 @@ app.get('/api/user', (req, res) => {
         return res.status(400).json({ error: 'Email не указан' });
     }
 
-    db.get(`SELECT username, email, phone, gender, photo FROM users WHERE email = ?`, [email], (err, row) => {
+    db.get(`
+        SELECT 
+            username,
+            email,
+            phone,
+            gender,
+            photo
+        FROM users 
+        WHERE email = ?
+    `, [email], (err, row) => {
         if (err) {
             return res.status(500).json({ error: 'Ошибка при получении данных пользователя' });
         }
@@ -67,8 +76,8 @@ app.get('/api/transactions', (req, res) => {
 });
 
 // получение счетов пользователя
-app.post('/api/accounts', (req, res) => {
-    const { email } = req.body;
+app.get('/api/accounts', (req, res) => {
+    const { email } = req.query;
 
     if (!email) {
         return res.status(400).json({ error: 'Email не указан' });

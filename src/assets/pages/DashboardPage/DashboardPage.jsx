@@ -25,14 +25,13 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/accounts', {
-          method: 'POST',
+        const response = await fetch(`http://localhost:3000/api/accounts?email=${email}`, {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email })
+          }
         });
-  
+        
         const data = await response.json();
         const formattedData = data.map(account => ({
           id: account.id,
