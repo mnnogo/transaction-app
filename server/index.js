@@ -23,6 +23,84 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
+// получение информации о пользователе
+app.get('/api/user', (req, res) => {
+    const { email } = req.query;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email не указан' });
+    }
+
+    db.get(`
+        SELECT 
+            username,
+            email,
+            phone,
+            gender,
+            photo
+        FROM users 
+        WHERE email = ?
+    `, [email], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: 'Ошибка при получении данных пользователя' });
+        }
+        if (!row) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
+        res.json(row);
+    });
+});
+
+// получение транзакций пользователя
+app.get('/api/transactions', (req, res) => {
+    const { email } = req.query;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email не указан' });
+    }
+
+    db.all(`
+        SELECT t.from_account, t.to_account, t.transaction_date, t.sum
+        FROM transactions t
+        JOIN accounts a1 ON t.from_account = a1.account_id
+        JOIN accounts a2 ON t.to_account = a2.account_id
+        JOIN users u ON u.user_id = a1.user_id OR u.user_id = a2.user_id
+        WHERE u.email = ?
+        ORDER BY t.transaction_date DESC
+    `, [email], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Ошибка при получении транзакций' });
+        }
+        res.json(rows);
+    });
+});
+
+// получение счетов пользователя
+app.get('/api/accounts', (req, res) => {
+    const { email } = req.query;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email не указан' });
+    }
+
+    db.all(`
+        SELECT 
+            a.account_id,
+            a.account_name,
+            a.current_balance,
+            a.income,
+            a.expense
+        FROM accounts a
+        JOIN users u ON a.user_id = u.user_id
+        WHERE u.email = ?
+    `, [email], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Ошибка при получении счетов: ' + err });
+        }
+        res.json(rows);
+    });
+});
+
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
 

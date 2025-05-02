@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiEye,
@@ -18,12 +18,40 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [accountsData, setAccountsData] = useState([]);
 
-  const accountsData = [
-    { name: 'Главный счет', balance: isVisible ? '44,500.00' : '******', income: isVisible ? '54,500.00' : '******', expenses: isVisible ? '10,000.00' : '******' },
-    { name: 'На машину', balance: isVisible ? '22,000.00' : '******', income: isVisible ? '25,000.00' : '******', expenses: isVisible ? '3,000.00' : '******' },
-    { name: 'Отпускные', balance: isVisible ? '15,000.00' : '******', income: isVisible ? '20,000.00' : '******', expenses: isVisible ? '5,000.00' : '******' }
-  ];
+  const email = localStorage.getItem('email');  
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/accounts?email=${email}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        const data = await response.json();
+        const formattedData = data.map(account => ({
+          id: account.id,
+          name: account.account_name,
+          balance: isVisible ? account.current_balance.toLocaleString('ru-RU') + '.00' : '******',
+          income: isVisible ? account.income.toLocaleString('ru-RU') + '.00' : '******',
+          expenses: isVisible ? account.expense.toLocaleString('ru-RU') + '.00' : '******'
+        }));
+        
+        setAccountsData(formattedData);
+        if (formattedData.length > 0) {
+          setSelectedAccount(formattedData[0]);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке счетов:', error);
+      }
+    };
+
+    fetchAccounts();
+  }, [email, isVisible]);
 
   const handleAccountClick = (account) => {
     setSelectedAccount(account);
@@ -44,6 +72,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('authToken');
+    localStorage.removeItem('email');
     navigate('/');
   };
 
@@ -56,6 +85,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         <div className={styles.leftColumn}>
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
+              <h2>{selectedAccount ? `${selectedAccount.id}` : 'Общий вид'}</h2>
               <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
               <button 
                 className={styles.eyeButton}
@@ -86,6 +116,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               {accountsData.map((account, index) => (
                 <AccountCard
                   key={index}
+                  id={account.id}
                   name={account.name}
                   balance={account.balance}
                   onClick={() => handleAccountClick(account)}
