@@ -33,6 +33,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         });
         
         const data = await response.json();
+        console.log(data);
         const formattedData = data.map(account => ({
           id: account.id,
           name: account.account_name,
@@ -40,7 +41,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           income: isVisible ? account.income.toLocaleString('ru-RU') + '.00' : '******',
           expenses: isVisible ? account.expense.toLocaleString('ru-RU') + '.00' : '******'
         }));
-        
+        console.log(formattedData);
         setAccountsData(formattedData);
         if (formattedData.length > 0) {
           setSelectedAccount(formattedData[0]);
