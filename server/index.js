@@ -66,9 +66,9 @@ app.get('/api/transactions', (req, res) => {
     });
 });
 
-// Получение счетов пользователя
-app.get('/api/accounts', (req, res) => {
-    const { email } = req.query;
+// получение счетов пользователя
+app.post('/api/accounts', (req, res) => {
+    const { email } = req.body;
 
     if (!email) {
         return res.status(400).json({ error: 'Email не указан' });
@@ -77,7 +77,7 @@ app.get('/api/accounts', (req, res) => {
     db.all(`
         SELECT 
             a.account_id,
-            a.name,
+            a.account_name,
             a.current_balance,
             a.income,
             a.expense
@@ -86,7 +86,7 @@ app.get('/api/accounts', (req, res) => {
         WHERE u.email = ?
     `, [email], (err, rows) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка при получении счетов' });
+            return res.status(500).json({ error: 'Ошибка при получении счетов: ' + err });
         }
         res.json(rows);
     });

@@ -18,9 +18,9 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
-
-  const email = localStorage.getItem('email');
   const [accountsData, setAccountsData] = useState([]);
+
+  const email = localStorage.getItem('email');  
 
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -32,15 +32,20 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           },
           body: JSON.stringify({ email })
         });
+  
         const data = await response.json();
-        console.log(data);
-        setAccountsData(data.map(account => ({
+        const formattedData = data.map(account => ({
           id: account.id,
-          name: account.name,
+          name: account.account_name,
           balance: isVisible ? account.current_balance.toLocaleString('ru-RU') + '.00' : '******',
           income: isVisible ? account.income.toLocaleString('ru-RU') + '.00' : '******',
           expenses: isVisible ? account.expense.toLocaleString('ru-RU') + '.00' : '******'
-        })));
+        }));
+        
+        setAccountsData(formattedData);
+        if (formattedData.length > 0) {
+          setSelectedAccount(formattedData[0]);
+        }
       } catch (error) {
         console.error('Ошибка при загрузке счетов:', error);
       }

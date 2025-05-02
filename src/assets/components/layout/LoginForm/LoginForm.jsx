@@ -9,12 +9,6 @@ const LoginForm = ({ setIsAuthenticated }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Упрощенная валидация email без флага 'v'
-  const validateEmail = (email) => {
-    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return re.test(email);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -22,18 +16,6 @@ const LoginForm = ({ setIsAuthenticated }) => {
     // Проверка заполненности полей
     if (!email || !password) {
       setError('Пожалуйста, заполните все поля');
-      return;
-    }
-
-    // Валидация email
-    if (!validateEmail(email)) {
-      setError('Пожалуйста, введите корректный email');
-      return;
-    }
-
-    // Проверка длины пароля
-    if (password.length < 6) {
-      setError('Пароль должен содержать минимум 6 символов');
       return;
     }
 
@@ -57,6 +39,7 @@ const LoginForm = ({ setIsAuthenticated }) => {
       // успешный вход
       setIsAuthenticated(true);
       localStorage.setItem('authToken', 'token-' + Date.now());
+      localStorage.setItem('email', email);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
@@ -75,7 +58,7 @@ const LoginForm = ({ setIsAuthenticated }) => {
         <div className={styles.inputGroup}>
           <label htmlFor="email" className={styles.label}>Email</label>
           <input
-            type="email"
+            type="text"
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
