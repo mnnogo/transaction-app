@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiEye,
+  FiEyeOff,
   FiPlus,
   FiArrowLeft,
   FiDollarSign
@@ -16,11 +17,12 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [isVisible, setIsVisible] = useState(true);
 
   const accountsData = [
-    { name: 'Главный счет', balance: '44,500.00', income: '54,500.00', expenses: '10,000.00' },
-    { name: 'На машину', balance: '22,000.00', income: '25,000.00', expenses: '3,000.00' },
-    { name: 'Отпускные', balance: '15,000.00', income: '20,000.00', expenses: '5,000.00' }
+    { name: 'Главный счет', balance: isVisible ? '44,500.00' : '******', income: isVisible ? '54,500.00' : '******', expenses: isVisible ? '10,000.00' : '******' },
+    { name: 'На машину', balance: isVisible ? '22,000.00' : '******', income: isVisible ? '25,000.00' : '******', expenses: isVisible ? '3,000.00' : '******' },
+    { name: 'Отпускные', balance: isVisible ? '15,000.00' : '******', income: isVisible ? '20,000.00' : '******', expenses: isVisible ? '5,000.00' : '******' }
   ];
 
   const handleAccountClick = (account) => {
@@ -29,14 +31,14 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
   const balanceData = selectedAccount 
     ? [
-        { title: 'Баланс', amount: selectedAccount.balance },
-        { title: 'Доходы', amount: selectedAccount.income },
-        { title: 'Расходы', amount: selectedAccount.expenses }
+        { title: 'Баланс', amount: isVisible ? selectedAccount.balance : '******' },
+        { title: 'Доходы', amount: isVisible ? selectedAccount.income : '******' },
+        { title: 'Расходы', amount: isVisible ? selectedAccount.expenses : '******' }
       ]
     : [
-        { title: 'Общий баланс', amount: accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' },
-        { title: 'Общие доходы', amount: accountsData.reduce((sum, acc) => sum + parseFloat(acc.income.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' },
-        { title: 'Общие расходы', amount: accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' }
+        { title: 'Общий баланс', amount: isVisible ? accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' : '******'},
+        { title: 'Общие доходы', amount: isVisible ? accountsData.reduce((sum, acc) => sum + parseFloat(acc.income.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' : '******'},
+        { title: 'Общие расходы', amount: isVisible ? accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' : '******'}
       ];
 
   const handleLogout = () => {
@@ -55,8 +57,11 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
-              <button className={styles.eyeButton}>
-                <FiEye size={20} />
+              <button 
+                className={styles.eyeButton}
+                onClick={() => setIsVisible(!isVisible)}
+              >
+                {isVisible ? <FiEye size={20} /> : <FiEyeOff size={20} />}
               </button>
             </div>
             <div className={styles.balanceGrid}>
