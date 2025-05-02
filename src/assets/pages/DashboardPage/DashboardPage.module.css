@@ -73,15 +73,39 @@
   transform: scale(1.1);
 }
 
+.transfersContainer {
+  overflow-x: auto;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .transfersTable {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  min-width: 600px;
+}
+
+.transfersTable th {
+  text-align: left;
+  padding: 12px 10px;
+  background-color: #f5f5f5;
+  font-weight: 500;
+  color: #555;
 }
 
 .transfersTable td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  padding: 12px 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.arrowCell {
+  text-align: center;
+  width: 30px;
 }
 
 .footer {
@@ -120,7 +144,6 @@
   transform: translateX(-4px);
 }
 
-/* Стили для кнопки перевода */
 .transferButton {
   width: 100%;
   padding: 15px;
@@ -149,40 +172,145 @@
   font-size: 18px;
 }
 
+.refreshSection {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.refreshHistoryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f5f5f5;
+  color: #555;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refreshHistoryButton:hover {
+  background: #e0e0e0;
+}
+
+.refreshHistoryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refreshIconLoading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading,
+.noTransactions {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .dashboard {
-      padding: 20px;
+    padding: 20px;
   }
   
   .main {
-      flex-direction: column;
-      gap: 20px;
+    flex-direction: column;
+    gap: 20px;
   }
   
   .balanceGrid,
   .accountsGrid {
-      grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
   
   .eyeButton,
   .addButton {
-      width: 36px;
-      height: 36px;
+    width: 36px;
+    height: 36px;
   }
 
   .transferButton {
-      padding: 12px;
-      font-size: 14px;
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .transfersTable {
+    min-width: 100%;
+  }
+  
+  .transfersTable thead {
+    display: none;
+  }
+  
+  .transfersTable tr {
+    display: block;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .transfersTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: none;
+  }
+  
+  .transfersTable td::before {
+    content: attr(data-label);
+    font-weight: 500;
+    color: #555;
+    margin-right: 10px;
+  }
+  
+  .arrowCell {
+    display: none;
   }
 }
 
 @media (max-width: 480px) {
   .section {
-      padding: 15px;
+    padding: 15px;
   }
 
   .transferButton {
-      margin-bottom: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .refreshHistoryButton {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  .dashboard {
+    padding: 15px 10px;
+  }
+  
+  .section {
+    padding: 12px;
+  }
+  
+  .transfersTable td {
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+  
+  .transferButton {
+    font-size: 14px;
+    padding: 10px;
   }
 }
