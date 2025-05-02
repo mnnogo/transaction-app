@@ -5,7 +5,8 @@ import {
   FiEyeOff,
   FiPlus,
   FiArrowLeft,
-  FiDollarSign
+  FiDollarSign,
+  FiRefreshCw
 } from 'react-icons/fi';
 import Header from '../../components/layout/Header/Header';
 import OverviewCard from '../../components/layout/OverviewCard/OverviewCard';
@@ -18,55 +19,112 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [accountsData, setAccountsData] = useState([]);
+  const [transactions, setTransactions] = useState([]);
 
-  const email = localStorage.getItem('email');  
+  const email = localStorage.getItem('email');
 
+  // Загрузка данных
   useEffect(() => {
-    const fetchAccounts = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/api/accounts?email=${email}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
+        // Загрузка счетов
+        const accountsResponse = await fetch(`http://localhost:3000/api/accounts?email=${email}`);
+        const accounts = await accountsResponse.json();
         
-        const data = await response.json();
-        const formattedData = data.map(account => ({
-          id: account.id,
+        const formattedAccounts = accounts.map(account => ({
+          accountId: account.account_id,
           name: account.account_name,
-          balance: isVisible ? account.current_balance.toLocaleString('ru-RU') + '.00' : '******',
-          income: isVisible ? account.income.toLocaleString('ru-RU') + '.00' : '******',
-          expenses: isVisible ? account.expense.toLocaleString('ru-RU') + '.00' : '******'
+          balance: account.current_balance,
+          income: account.income,
+          expenses: account.expense
         }));
         
-        setAccountsData(formattedData);
-        if (formattedData.length > 0) {
-          setSelectedAccount(formattedData[0]);
+        setAccountsData(formattedAccounts);
+        if (formattedAccounts.length > 0) {
+          setSelectedAccount(formattedAccounts[0]);
         }
+
+        // Загрузка транзакций
+        const transactionsResponse = await fetch(`http://localhost:3000/api/transactions?email=${email}`);
+        const transactionsData = await transactionsResponse.json();
+        setTransactions(transactionsData);
       } catch (error) {
-        console.error('Ошибка при загрузке счетов:', error);
+        console.error('Ошибка загрузки данных:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchAccounts();
-  }, [email, isVisible]);
+    fetchData();
+  }, [email]);
 
   const handleAccountClick = (account) => {
     setSelectedAccount(account);
   };
 
+  const refreshData = async () => {
+    setIsLoading(true);
+    try {
+      const accountsResponse = await fetch(`http://localhost:3000/api/accounts?email=${email}`);
+      const accounts = await accountsResponse.json();
+      
+      const formattedAccounts = accounts.map(account => ({
+        accountId: account.account_id,
+        name: account.account_name,
+        balance: account.current_balance,
+        income: account.income,
+        expenses: account.expense
+      }));
+      
+      setAccountsData(formattedAccounts);
+
+      // Обновляем выбранный счет, если он еще существует
+      if (selectedAccount) {
+        const updatedSelectedAccount = formattedAccounts.find(
+          acc => acc.accountId === selectedAccount.accountId
+        );
+        setSelectedAccount(updatedSelectedAccount || formattedAccounts[0]);
+      }
+
+      const transactionsResponse = await fetch(`http://localhost:3000/api/transactions?email=${email}`);
+      const transactionsData = await transactionsResponse.json();
+      setTransactions(transactionsData);
+    } catch (error) {
+      console.error('Ошибка обновления данных:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatAmount = (amount) => {
+    return isVisible ? parseFloat(amount).toLocaleString('ru-RU', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) : '******';
+  };
+
   const balanceData = selectedAccount 
     ? [
-        { title: 'Баланс', amount: isVisible ? selectedAccount.balance : '******' },
-        { title: 'Доходы', amount: isVisible ? selectedAccount.income : '******' },
-        { title: 'Расходы', amount: isVisible ? selectedAccount.expenses : '******' }
+        { title: 'Баланс', amount: formatAmount(selectedAccount.balance) },
+        { title: 'Доходы', amount: formatAmount(selectedAccount.income) },
+        { title: 'Расходы', amount: formatAmount(selectedAccount.expenses) }
       ]
     : [
-        { title: 'Общий баланс', amount: isVisible ? accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' : '******'},
-        { title: 'Общие доходы', amount: isVisible ? accountsData.reduce((sum, acc) => sum + parseFloat(acc.income.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' : '******'},
-        { title: 'Общие расходы', amount: isVisible ? accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses.replace(/,/g, '')), 0).toLocaleString('ru-RU') + '.00' : '******'}
+        { 
+          title: 'Общий баланс', 
+          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
+        },
+        { 
+          title: 'Общие доходы', 
+          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
+        },
+        { 
+          title: 'Общие расходы', 
+          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
+        }
       ];
 
   const handleLogout = () => {
@@ -74,6 +132,43 @@ const DashboardPage = ({ setIsAuthenticated }) => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('email');
     navigate('/');
+  };
+
+  const handleTransferSuccess = async () => {
+    setIsLoading(true);
+    try {
+      // Обновляем данные счетов
+      const accountsResponse = await fetch(`http://localhost:3000/api/accounts?email=${email}`);
+      const accounts = await accountsResponse.json();
+      
+      const formattedAccounts = accounts.map(account => ({
+        accountId: account.account_id,
+        name: account.account_name,
+        balance: account.current_balance,
+        income: account.income,
+        expenses: account.expense
+      }));
+      
+      setAccountsData(formattedAccounts);
+      
+      // Обновляем выбранный счет
+      if (selectedAccount) {
+        const updatedSelectedAccount = formattedAccounts.find(
+          acc => acc.accountId === selectedAccount.accountId
+        );
+        setSelectedAccount(updatedSelectedAccount || formattedAccounts[0]);
+      }
+
+      // Обновляем транзакции
+      const transactionsResponse = await fetch(`http://localhost:3000/api/transactions?email=${email}`);
+      const transactionsData = await transactionsResponse.json();
+      setTransactions(transactionsData);
+    } catch (error) {
+      console.error('Ошибка обновления данных:', error);
+    } finally {
+      setIsLoading(false);
+      setShowTransferModal(false);
+    }
   };
 
   return (
@@ -85,14 +180,15 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         <div className={styles.leftColumn}>
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>{selectedAccount ? `${selectedAccount.id}` : 'Общий вид'}</h2>
               <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
-              <button 
-                className={styles.eyeButton}
-                onClick={() => setIsVisible(!isVisible)}
-              >
-                {isVisible ? <FiEye size={20} /> : <FiEyeOff size={20} />}
-              </button>
+              <div className={styles.actions}>
+                <button 
+                  className={styles.eyeButton}
+                  onClick={() => setIsVisible(!isVisible)}
+                >
+                  {isVisible ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+                </button>
+              </div>
             </div>
             <div className={styles.balanceGrid}>
               {balanceData.map((item, index) => (
@@ -108,19 +204,17 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>Мои счета</h2>
-              <button className={styles.addButton}>
-                <FiPlus size={20} />
-              </button>
+              
             </div>
             <div className={styles.accountsGrid}>
-              {accountsData.map((account, index) => (
+              {accountsData.map((account) => (
                 <AccountCard
-                  key={index}
-                  id={account.id}
+                  key={account.accountId}
+                  accountId={account.accountId}
                   name={account.name}
-                  balance={account.balance}
+                  balance={formatAmount(account.balance)}
                   onClick={() => handleAccountClick(account)}
-                  isSelected={selectedAccount?.name === account.name}
+                  isSelected={selectedAccount?.accountId === account.accountId}
                 />
               ))}
             </div>
@@ -131,31 +225,70 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           <button 
             onClick={() => setShowTransferModal(true)}
             className={styles.transferButton}
+            disabled={!selectedAccount || isLoading}
           >
             <FiDollarSign className={styles.transferIcon} />
             <span>Перевести</span>
           </button>
 
+          <div className={styles.refreshSection}>
+            <button 
+              onClick={refreshData}
+              className={styles.refreshHistoryButton}
+              disabled={isLoading}
+            >
+              <FiRefreshCw size={18} className={isLoading ? styles.refreshIconLoading : ''} />
+              <span>Обновить историю</span>
+            </button>
+          </div>
+
           <section className={styles.section}>
-            <h2>Переводы</h2>
-            <table className={styles.transfersTable}>
-              <tbody>
-                <tr>
-                  <td>Счет А</td>
-                  <td>→</td>
-                  <td>Счет Б</td>
-                  <td>10,000.00</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className={styles.sectionHeader}>
+              <h2>История переводов</h2>
+            </div>
+            <div className={styles.transfersContainer}>
+              {isLoading ? (
+                <div className={styles.loading}>Загрузка...</div>
+              ) : transactions.length > 0 ? (
+                <div className={styles.tableWrapper}>
+                  <table className={styles.transfersTable}>
+                    <thead>
+                      <tr>
+                        <th>Отправитель</th>
+                        <th></th>
+                        <th>Получатель</th>
+                        <th>Сумма</th>
+                        <th>Дата</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((transaction, index) => (
+                        <tr key={index}>
+                          <td data-label="Отправитель">{transaction.from_account}</td>
+                          <td className={styles.arrowCell}>→</td>
+                          <td data-label="Получатель">{transaction.to_account}</td>
+                          <td data-label="Сумма">{formatAmount(transaction.sum)} ₽</td>
+                          <td data-label="Дата">{new Date(transaction.transaction_date).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className={styles.noTransactions}>Нет операций</div>
+              )}
+            </div>
           </section>
         </div>
       </main>
 
-      {showTransferModal && (
+      {showTransferModal && selectedAccount && (
         <TransferModal 
           onClose={() => setShowTransferModal(false)} 
           accounts={accountsData}
+          selectedAccount={selectedAccount}
+          onTransferSuccess={handleTransferSuccess}
+          isLoading={isLoading}
         />
       )}
 
