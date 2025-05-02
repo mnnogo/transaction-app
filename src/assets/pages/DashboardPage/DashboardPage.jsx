@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiEye,
@@ -19,11 +19,35 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
 
-  const accountsData = [
-    { name: 'Главный счет', balance: isVisible ? '44,500.00' : '******', income: isVisible ? '54,500.00' : '******', expenses: isVisible ? '10,000.00' : '******' },
-    { name: 'На машину', balance: isVisible ? '22,000.00' : '******', income: isVisible ? '25,000.00' : '******', expenses: isVisible ? '3,000.00' : '******' },
-    { name: 'Отпускные', balance: isVisible ? '15,000.00' : '******', income: isVisible ? '20,000.00' : '******', expenses: isVisible ? '5,000.00' : '******' }
-  ];
+  const email = localStorage.getItem('email');
+  const [accountsData, setAccountsData] = useState([]);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/accounts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email })
+        });
+        const data = await response.json();
+        console.log(data);
+        setAccountsData(data.map(account => ({
+          id: account.id,
+          name: account.name,
+          balance: isVisible ? account.current_balance.toLocaleString('ru-RU') + '.00' : '******',
+          income: isVisible ? account.income.toLocaleString('ru-RU') + '.00' : '******',
+          expenses: isVisible ? account.expense.toLocaleString('ru-RU') + '.00' : '******'
+        })));
+      } catch (error) {
+        console.error('Ошибка при загрузке счетов:', error);
+      }
+    };
+
+    fetchAccounts();
+  }, [email, isVisible]);
 
   const handleAccountClick = (account) => {
     setSelectedAccount(account);
@@ -44,6 +68,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('authToken');
+    localStorage.removeItem('email');
     navigate('/');
   };
 
