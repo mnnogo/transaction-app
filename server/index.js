@@ -141,6 +141,13 @@ app.post('/api/transfer', (req, res) => {
         });
     }
 
+    // проверяем что счет отправителя и счет получателя не одинаковые
+    if (fromAccountId === toAccountId) {
+        return res.status(400).json({ 
+            error: 'Счет отправителя и счет получателя не могут быть одинаковыми' 
+        });
+    }
+
     // проверяем что amount - число и больше 0
     if (isNaN(amount) || amount <= 0) {
         return res.status(400).json({ 
