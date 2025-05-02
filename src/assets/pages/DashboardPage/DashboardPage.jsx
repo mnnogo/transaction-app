@@ -85,6 +85,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         <div className={styles.leftColumn}>
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
+              <h2>{selectedAccount ? `${selectedAccount.id}` : 'Общий вид'}</h2>
               <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
               <button 
                 className={styles.eyeButton}
@@ -115,6 +116,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               {accountsData.map((account, index) => (
                 <AccountCard
                   key={index}
+                  id={account.id}
                   name={account.name}
                   balance={account.balance}
                   onClick={() => handleAccountClick(account)}
