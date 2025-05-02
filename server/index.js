@@ -85,7 +85,7 @@ app.get('/api/accounts', (req, res) => {
 
     db.all(`
         SELECT 
-            a.account_id as id,
+            a.account_id,
             a.account_name,
             a.current_balance,
             a.income,
@@ -141,7 +141,6 @@ app.post('/api/transfer', (req, res) => {
         });
     }
 
-    // проверяем что счет отправителя и счет получателя не одинаковые
     if (fromAccountId === toAccountId) {
         return res.status(400).json({ 
             error: 'Счет отправителя и счет получателя не могут быть одинаковыми' 
