@@ -1,18 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit, FiKey } from 'react-icons/fi';
 import styles from './ProfilePage.module.css';
 
 const ProfilePage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  const email = localStorage.getItem('email');
 
-  const userData = {
-    name: "Иванов Иван",
-    email: "mail@mail.ru",
-    phone: "+7 000 000 00 00",
-    gender: "Мужской",
-    avatar: "/images/avatar.jpg"
-  };
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/user?email=${email}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        const data = await response.json();
+        if (data.photo) {
+          data.photo = `data:image/jpeg;base64,${data.photo}`;
+        }
+        setUserData(data);
+      } catch (error) {
+        console.error('Ошибка при загрузке данных пользователя:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [email]);
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -20,26 +36,30 @@ const ProfilePage = ({ setIsAuthenticated }) => {
 
   const handlePasswordReset = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('authToken');
+    localStorage.clear();
     navigate('/');
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('authToken');
+    localStorage.clear();
     navigate('/');
   };
+
+  if (!userData) {
+    return <div className={styles.container}>Загрузка...</div>;
+  }
 
   return (
     <div className={styles.container}>
       <div className={styles.profileCard}>
         <div className={styles.avatarContainer}>
-          <img src={userData.avatar} alt="Avatar" className={styles.avatar} />
+          <img src={userData.photo} alt="Avatar" className={styles.avatar} />
           <button className={styles.editIcon}>
             <FiEdit size={12} />
           </button>
         </div>
-        <h2>{userData.name}</h2>
+        <h2>{userData.username}</h2>
 
         <div className={styles.infoBlock}>
           <span>Email</span>
