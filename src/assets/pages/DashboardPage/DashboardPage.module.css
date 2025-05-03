@@ -397,8 +397,8 @@
   background: #cccccc;
   cursor: not-allowed;
 }
-/* Добавьте новые медиа-запросы для улучшенной адаптивности */
-@media (max-width: 1100px) {
+
+@media (max-width: 1300px) {
   .dashboard {
     padding: 20px 30px;
   }
@@ -415,7 +415,7 @@
 
 
 
-@media (max-width: 967px) {
+@media (max-width: 1100px) {
   .dashboard {
     padding: 20px;
   }
@@ -558,4 +558,122 @@
   background-color: rgba(231, 76, 60, 0.1);
   border-radius: 6px;
   border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.rightColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+  margin-left: 20px;
+}
+
+.operationButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.depositButton,
+.withdrawButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transferButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.refreshSection {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.refreshHistoryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transfersContainer {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.transfersTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tableHeader {
+  text-align: left;
+  padding: 12px;
+  color: #666;
+  font-weight: 500;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tableRow {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableCell {
+  padding: 12px;
+  color: #333;
+}
+
+@media (max-width: 1200px) {
+  .rightColumn {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 992px) {
+  .rightColumn {
+    max-width: 100%;
+    margin-left: 0;
+  }
 }
