@@ -114,7 +114,7 @@ app.post('/api/transfer', (req, res) => {
         return res.status(400).json({ error: 'Необходимо указать все параметры' });
     }
 
-    if (fromAccountId === toAccountId) {
+    if (fromAccountId == toAccountId) {
         return res.status(400).json({ error: 'Счет отправителя и получателя не могут быть одинаковыми' });
     }
 
@@ -134,14 +134,14 @@ app.post('/api/transfer', (req, res) => {
         const { type: senderType, current_balance: senderBalance, user_id: userId } = senderRow;
 
         // Проверяем баланс
-        if (senderType === 'Дебетовый' && checkDebitAccountBalance(senderBalance, amount)) {
+        if (senderType === 'debit' && checkDebitAccountBalance(senderBalance, amount)) {
             db.run('ROLLBACK');
             return res.status(400).json({ error: 'Недостаточно средств на дебетовом счёте' });
         }
 
-        if (senderType === 'Кредитный' && checkCreditAccountLimit(senderBalance, amount)) {
+        if (senderType === 'credit' && checkCreditAccountLimit(senderBalance, amount)) {
             db.run('ROLLBACK');
-            return res.status(400).json({ error: 'Превышен лимит кредитного счёта' });
+            return res.status(400).json({ error: 'Превышен лимит кредитного счёта (100 000₽)' });
         }
 
         // Проверяем, что оба аккаунта существуют
@@ -158,7 +158,7 @@ app.post('/api/transfer', (req, res) => {
                 }
 
                 // Если отправитель - дебетовый счёт и получатель НЕ кредитный, проверяем ограничение
-                if (senderType === 'Дебетовый' && toAccount.type !== 'Кредитный') {
+                if (senderType === 'debit' && toAccount.type !== 'credit') {
                     hasProblematicCreditAccount(userId, (err, hasBadCredit) => {
                         if (err) {
                             db.run('ROLLBACK');
