@@ -18,11 +18,6 @@ const TransferModal = ({ onClose, accounts, selectedAccount, onTransferSuccess, 
       return;
     }
 
-    if (formData.fromAccountId === formData.toAccountId) {
-      setError('Нельзя переводить на тот же счет');
-      return;
-    }
-
     const amount = parseFloat(formData.amount);
     if (isNaN(amount)) {
       setError('Введите корректное значение');
@@ -31,11 +26,6 @@ const TransferModal = ({ onClose, accounts, selectedAccount, onTransferSuccess, 
 
     if (amount < 10) {
       setError('Минимальная сумма перевода - 10.00 рублей');
-      return;
-    }
-
-    if (amount > 30000) {
-      setError('Максимальная сумма перевода - 30,000.00 рублей');
       return;
     }
 
