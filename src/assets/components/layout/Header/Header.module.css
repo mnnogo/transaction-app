@@ -3,6 +3,7 @@
   justify-content: flex-end;
   padding: 20px 0;
   margin-bottom: 30px;
+  margin-top: 40px;
 }
 
 .userInfo {
@@ -54,5 +55,8 @@
   
   .userInfo {
     gap: 15px;
+  }
+  .header {
+  margin-top: 20px;
   }
 }
