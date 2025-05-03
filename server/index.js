@@ -210,8 +210,8 @@ app.post('/api/accounts/add', (req, res) => {
         return res.status(400).json({ error: 'Необходимо указать email, название счёта и тип счёта' });
     }
 
-    if (!['Дебетовый', 'Кредитный'].includes(accountType)) {
-        return res.status(400).json({ error: 'Недопустимый тип счёта. Допустимые значения: Дебетовый, Кредитный' });
+    if (!['debit', 'credit'].includes(accountType)) {
+        return res.status(400).json({ error: 'Недопустимый тип счёта. Допустимые значения: debit, credit' });
     }
 
     db.run('BEGIN TRANSACTION');

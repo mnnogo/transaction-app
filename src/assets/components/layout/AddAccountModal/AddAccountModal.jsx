@@ -22,7 +22,7 @@ const AddAccountModal = ({ onClose, onCreateAccount, isLoading }) => {
         },
         body: JSON.stringify({
           accountName: accountName,
-          accountType: accountType == "Дебетовая карта" ? "Дебетовый" : "Кредитный",
+          accountType: accountType,
           email: localStorage.getItem('email')
         })
       });

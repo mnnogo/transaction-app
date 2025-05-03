@@ -9,7 +9,7 @@ const AccountCard = ({ accountId, name, type, balance, onClick, isSelected }) =>
     >
       <div className={styles.accountHeader}>
         <h3 className={styles.accountName}>{name}</h3>
-        <h3 className={styles.accountName}>{type}</h3>
+        <h3 className={styles.accountName}>{type === 'debit' ? 'Дебетовый' : 'Кредитный'}</h3>
         <div className={styles.accountId}>{accountId}</div>
       </div>
       <div className={styles.accountBalance}>{balance} ₽</div>
