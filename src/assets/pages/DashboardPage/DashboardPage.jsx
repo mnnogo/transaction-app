@@ -6,7 +6,9 @@ import {
   FiPlus,
   FiArrowLeft,
   FiDollarSign,
-  FiRefreshCw
+  FiRefreshCw,
+  FiTrendingUp,
+  FiTrendingDown
 } from 'react-icons/fi';
 import Header from '../../components/layout/Header/Header';
 import OverviewCard from '../../components/layout/OverviewCard/OverviewCard';
@@ -19,11 +21,15 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [accountsData, setAccountsData] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [amount, setAmount] = useState('');
+  const [selectedOperationAccount, setSelectedOperationAccount] = useState(null);
 
   const email = localStorage.getItem('email');
 
@@ -32,7 +38,6 @@ const DashboardPage = ({ setIsAuthenticated }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Загрузка счетов
         const accountsResponse = await fetch(`http://localhost:3000/api/accounts?email=${email}`);
         const accounts = await accountsResponse.json();
         
@@ -47,9 +52,9 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         setAccountsData(formattedAccounts);
         if (formattedAccounts.length > 0) {
           setSelectedAccount(formattedAccounts[0]);
+          setSelectedOperationAccount(formattedAccounts[0].accountId);
         }
 
-        // Загрузка транзакций
         const transactionsResponse = await fetch(`http://localhost:3000/api/transactions?email=${email}`);
         const transactionsData = await transactionsResponse.json();
         setTransactions(transactionsData);
@@ -83,7 +88,6 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       
       setAccountsData(formattedAccounts);
 
-      // Обновляем выбранный счет
       if (selectedAccount) {
         const updatedSelectedAccount = formattedAccounts.find(
           acc => acc.accountId === selectedAccount.accountId
@@ -111,6 +115,76 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }) : '******';
+  };
+
+  const handleDeposit = async () => {
+    if (!amount || isNaN(amount)) {
+      alert('Введите корректную сумму');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/api/accounts/deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          account_id: selectedOperationAccount,
+          amount: parseFloat(amount)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при зачислении средств');
+      }
+
+      await refreshData();
+      setShowDepositModal(false);
+      setAmount('');
+    } catch (error) {
+      console.error('Ошибка:', error);
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!amount || isNaN(amount)) {
+      alert('Введите корректную сумму');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/api/accounts/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          account_id: selectedOperationAccount,
+          amount: parseFloat(amount)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при снятии средств');
+      }
+
+      await refreshData();
+      setShowWithdrawModal(false);
+      setAmount('');
+    } catch (error) {
+      console.error('Ошибка:', error);
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const balanceData = selectedAccount 
@@ -203,6 +277,25 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         </div>
 
         <div className={styles.rightColumn}>
+          <div className={styles.operationButtons}>
+            <button 
+              onClick={() => setShowDepositModal(true)}
+              className={styles.depositButton}
+              disabled={isLoading}
+            >
+              <FiTrendingUp className={styles.buttonIcon} />
+              <span>Зачислить</span>
+            </button>
+            <button 
+              onClick={() => setShowWithdrawModal(true)}
+              className={styles.withdrawButton}
+              disabled={isLoading}
+            >
+              <FiTrendingDown className={styles.buttonIcon} />
+              <span>Снять</span>
+            </button>
+          </div>
+
           <button 
             onClick={() => setShowTransferModal(true)}
             className={styles.transferButton}
@@ -279,6 +372,102 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           onCreateAccount={handleAddAccountSuccess}
           isLoading={isLoading}
         />
+      )}
+
+      {/* Модальное окно зачисления */}
+      {showDepositModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContainer}>
+            <h2>Зачисление средств</h2>
+            <div className={styles.formGroup}>
+              <label>Счет для зачисления</label>
+              <select
+                value={selectedOperationAccount}
+                onChange={(e) => setSelectedOperationAccount(e.target.value)}
+                className={styles.accountSelect}
+              >
+                {accountsData.map(account => (
+                  <option key={account.accountId} value={account.accountId}>
+                    {account.name} ({formatAmount(account.balance)} ₽)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Сумма зачисления</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Введите сумму"
+                className={styles.amountInput}
+              />
+            </div>
+            <div className={styles.modalButtons}>
+              <button 
+                onClick={() => setShowDepositModal(false)}
+                className={styles.cancelButton}
+              >
+                Отмена
+              </button>
+              <button 
+                onClick={handleDeposit}
+                className={styles.confirmButton}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Зачисление...' : 'Зачислить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно снятия */}
+      {showWithdrawModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContainer}>
+            <h2>Снятие средств</h2>
+            <div className={styles.formGroup}>
+              <label>Счет для снятия</label>
+              <select
+                value={selectedOperationAccount}
+                onChange={(e) => setSelectedOperationAccount(e.target.value)}
+                className={styles.accountSelect}
+              >
+                {accountsData.map(account => (
+                  <option key={account.accountId} value={account.accountId}>
+                    {account.name} ({formatAmount(account.balance)} ₽)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Сумма снятия</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Введите сумму"
+                className={styles.amountInput}
+              />
+            </div>
+            <div className={styles.modalButtons}>
+              <button 
+                onClick={() => setShowWithdrawModal(false)}
+                className={styles.cancelButton}
+              >
+                Отмена
+              </button>
+              <button 
+                onClick={handleWithdraw}
+                className={styles.confirmButton}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Снятие...' : 'Снять'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <footer className={styles.footer}>
