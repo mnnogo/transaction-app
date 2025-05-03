@@ -231,8 +231,8 @@ app.post('/api/accounts/add', (req, res) => {
         // создаём новый счёт
         db.run(
             `INSERT INTO accounts (user_id, account_name, type, current_balance, income, expense)
-             VALUES (?, ?, ?, 0, 0, 0, ?)`,
-            [user.user_id, accountName, accountType, initialBalance, new Date().toISOString()],
+             VALUES (?, ?, ?, 0, 0, 0)`,
+            [user.user_id, accountName, accountType],
             function (err) {
                 if (err) {
                     db.run('ROLLBACK');
