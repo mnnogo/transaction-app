@@ -206,6 +206,69 @@ app.post('/api/transfer', (req, res) => {
     });
 });
 
+// добавление нового счёта
+app.post('/api/accounts/add', (req, res) => {
+    const { email, accountName, accountType } = req.body;
+
+    if (!email || !accountName || !accountType) {
+        return res.status(400).json({ error: 'Необходимо указать email, название счёта и тип счёта' });
+    }
+
+    if (!['Дебетовый', 'Кредитный'].includes(accountType)) {
+        return res.status(400).json({ error: 'Недопустимый тип счёта. Допустимые значения: Дебетовый, Кредитный' });
+    }
+
+    db.run('BEGIN TRANSACTION');
+
+    // находим user_id по email
+    db.get('SELECT user_id FROM users WHERE email = ?', [email], (err, user) => {
+        if (err) {
+            db.run('ROLLBACK');
+            return res.status(500).json({ error: 'Ошибка при поиске пользователя' });
+        }
+
+        if (!user) {
+            db.run('ROLLBACK');
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
+
+        const initialBalance = accountType === 'Кредитный' ? 0 : 1000; // Начальный баланс
+
+        // создаём новый счёт
+        db.run(
+            `INSERT INTO accounts (user_id, account_name, type, current_balance, income, expense)
+             VALUES (?, ?, ?, ?, 0, 0, ?)`,
+            [user.user_id, accountName, accountType, initialBalance, new Date().toISOString()],
+            function (err) {
+                if (err) {
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: 'Ошибка при создании счёта' });
+                }
+
+                // получаем данные созданного счёта для ответа
+                db.get(
+                    `SELECT account_id, account_name, type, current_balance, income, expense 
+                     FROM accounts 
+                     WHERE rowid = ?`,
+                    [this.lastID],
+                    (err, newAccount) => {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: 'Ошибка при получении данных нового счёта' });
+                        }
+
+                        db.run('COMMIT');
+                        res.status(201).json({
+                            message: 'Счёт успешно создан',
+                            account: newAccount
+                        });
+                    }
+                );
+            }
+        );
+    });
+});
+
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту ${port}`);
