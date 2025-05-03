@@ -155,67 +155,145 @@ app.post('/api/transfer', (req, res) => {
         });
     }
 
+    if (amount > 30000) {
+        return res.status(400).json({ 
+            error: 'Сумма перевода не должна превышать 30000₽' 
+        });
+    }
+
     try {
         db.run('BEGIN TRANSACTION');
 
-        // проверяем существование обоих аккаунтов
-        db.get('SELECT account_id FROM accounts WHERE account_id = ?', [fromAccountId], (err, fromAccount) => {
-            if (err) {
+        // получаем тип и баланс счёта отправителя
+        db.get('SELECT current_balance, type, user_id FROM accounts WHERE account_id = ?', [fromAccountId], (err, senderRow) => {
+            if (err || !senderRow) {
                 db.run('ROLLBACK');
-                return res.status(500).json({ error: 'Ошибка при проверке счета отправителя' });
+                return res.status(500).json({ error: 'Ошибка при проверке счёта отправителя' });
             }
 
-            if (!fromAccount) {
+            const { type: senderType, current_balance: senderBalance, user_id: userId } = senderRow;
+
+            // Проверяем баланс в зависимости от типа
+            if (senderType === 'Дебетовый' && senderBalance < amount) {
                 db.run('ROLLBACK');
-                return res.status(404).json({ error: 'Счет отправителя не найден' });
+                return res.status(400).json({ error: 'Недостаточно средств на дебетовом счёте' });
             }
 
-            db.get('SELECT account_id FROM accounts WHERE account_id = ?', [toAccountId], (err, toAccount) => {
-                if (err) {
-                    db.run('ROLLBACK');
-                    return res.status(500).json({ error: 'Ошибка при проверке счета получателя' });
-                }
+            if (senderType === 'Кредитный' && (senderBalance - amount) < -100000) {
+                db.run('ROLLBACK');
+                return res.status(400).json({ error: 'Превышен лимит кредитного счёта' });
+            }
 
-                if (!toAccount) {
-                    db.run('ROLLBACK');
-                    return res.status(404).json({ error: 'Счет получателя не найден' });
-                }
-
-                // проверяем баланс отправителя
-                db.get('SELECT current_balance FROM accounts WHERE account_id = ?', [fromAccountId], (err, row) => {
+            // Если счёт дебетовый — проверяем ограничение по кредитному счёту пользователя
+            if (senderType === 'Дебетовый') {
+                db.get(`
+                    SELECT 1 FROM accounts 
+                    WHERE user_id = ? AND type = 'Кредитный' AND current_balance < -20000
+                    LIMIT 1
+                `, [userId], (err, row) => {
                     if (err) {
                         db.run('ROLLBACK');
-                        return res.status(500).json({ error: 'Ошибка при проверке баланса' });
+                        return res.status(500).json({ error: 'Ошибка при проверке кредитного счёта' });
                     }
 
-                    if (!row || row.current_balance < amount) {
+                    if (row) {
                         db.run('ROLLBACK');
-                        return res.status(400).json({ error: 'Недостаточно средств' });
+                        return res.status(403).json({
+                            error: 'Операция запрещена: у вас есть кредитный счёт с задолженностью более 20 000₽'
+                        });
                     }
 
-                    // выполняем перевод
-                    db.run(
-                        'INSERT INTO transactions (from_account, to_account, sum, transaction_date) VALUES (?, ?, ?, ?)',
-                        [fromAccountId, toAccountId, amount, new Date().toISOString()],
-                        function(err) {
+                    // продолжаем проверку существования аккаунтов
+                    db.get('SELECT account_id FROM accounts WHERE account_id = ?', [fromAccountId], (err, fromAccount) => {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: 'Ошибка при проверке счета отправителя' });
+                        }
+                        if (!fromAccount) {
+                            db.run('ROLLBACK');
+                            return res.status(404).json({ error: 'Счет отправителя не найден' });
+                        }
+
+                        db.get('SELECT account_id FROM accounts WHERE account_id = ?', [toAccountId], (err, toAccount) => {
                             if (err) {
                                 db.run('ROLLBACK');
-                                return res.status(500).json({ error: 'Ошибка при создании перевода.' });
+                                return res.status(500).json({ error: 'Ошибка при проверке счета получателя' });
+                            }
+                            if (!toAccount) {
+                                db.run('ROLLBACK');
+                                return res.status(404).json({ error: 'Счет получателя не найден' });
                             }
 
-                            // обновляем балансы, приходы и расходы
-                            db.run('UPDATE accounts SET current_balance = current_balance - ?, expense = expense + ? WHERE account_id = ?', [amount, amount, fromAccountId]);
-                            db.run('UPDATE accounts SET current_balance = current_balance + ?, income = income + ? WHERE account_id = ?', [amount, amount, toAccountId]);
+                            // выполняем перевод
+                            db.run(
+                                'INSERT INTO transactions (from_account, to_account, sum, transaction_date) VALUES (?, ?, ?, ?)',
+                                [fromAccountId, toAccountId, amount, new Date().toISOString()],
+                                function(err) {
+                                    if (err) {
+                                        db.run('ROLLBACK');
+                                        return res.status(500).json({ error: 'Ошибка при создании перевода.' });
+                                    }
 
-                            // завершаем транзакцию
-                            db.run('COMMIT');
-                            res.status(200).json({ 
-                                message: 'Перевод выполнен успешно'
-                            });
-                        }
-                    );
+                                    // обновляем балансы
+                                    db.run('UPDATE accounts SET current_balance = current_balance - ?, expense = expense + ? WHERE account_id = ?', [amount, amount, fromAccountId]);
+                                    db.run('UPDATE accounts SET current_balance = current_balance + ?, income = income + ? WHERE account_id = ?', [amount, amount, toAccountId]);
+
+                                    db.run('COMMIT');
+                                    res.status(200).json({ 
+                                        message: 'Перевод выполнен успешно'
+                                    });
+                                }
+                            );
+                        });
+                    });
                 });
-            });
+
+            } else {
+                // если счёт кредитный — пропускаем проверку по кредитному счёту владельца
+                // продолжаем выполнение перевода
+
+                db.get('SELECT account_id FROM accounts WHERE account_id = ?', [fromAccountId], (err, fromAccount) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ error: 'Ошибка при проверке счета отправителя' });
+                    }
+                    if (!fromAccount) {
+                        db.run('ROLLBACK');
+                        return res.status(404).json({ error: 'Счет отправителя не найден' });
+                    }
+
+                    db.get('SELECT account_id FROM accounts WHERE account_id = ?', [toAccountId], (err, toAccount) => {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: 'Ошибка при проверке счета получателя' });
+                        }
+                        if (!toAccount) {
+                            db.run('ROLLBACK');
+                            return res.status(404).json({ error: 'Счет получателя не найден' });
+                        }
+
+                        // выполняем перевод
+                        db.run(
+                            'INSERT INTO transactions (from_account, to_account, sum, transaction_date) VALUES (?, ?, ?, ?)',
+                            [fromAccountId, toAccountId, amount, new Date().toISOString()],
+                            function(err) {
+                                if (err) {
+                                    db.run('ROLLBACK');
+                                    return res.status(500).json({ error: 'Ошибка при создании перевода.' });
+                                }
+
+                                db.run('UPDATE accounts SET current_balance = current_balance - ?, expense = expense + ? WHERE account_id = ?', [amount, amount, fromAccountId]);
+                                db.run('UPDATE accounts SET current_balance = current_balance + ?, income = income + ? WHERE account_id = ?', [amount, amount, toAccountId]);
+
+                                db.run('COMMIT');
+                                res.status(200).json({ 
+                                    message: 'Перевод выполнен успешно'
+                                });
+                            }
+                        );
+                    });
+                });
+            }
         });
     } catch (error) {
         db.run('ROLLBACK');
@@ -225,4 +303,4 @@ app.post('/api/transfer', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту ${port}`);
-}); 
+});
