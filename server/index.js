@@ -232,12 +232,10 @@ app.post('/api/accounts/add', (req, res) => {
             return res.status(404).json({ error: 'Пользователь не найден' });
         }
 
-        const initialBalance = accountType === 'Кредитный' ? 0 : 1000; // Начальный баланс
-
         // создаём новый счёт
         db.run(
             `INSERT INTO accounts (user_id, account_name, type, current_balance, income, expense)
-             VALUES (?, ?, ?, ?, 0, 0, ?)`,
+             VALUES (?, ?, ?, 0, 0, 0, ?)`,
             [user.user_id, accountName, accountType, initialBalance, new Date().toISOString()],
             function (err) {
                 if (err) {
