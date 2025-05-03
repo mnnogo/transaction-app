@@ -8,7 +8,9 @@ import {
   FiDollarSign,
   FiRefreshCw,
   FiTrendingUp,
-  FiTrendingDown
+  FiTrendingDown,
+  FiChevronDown,
+  FiChevronUp
 } from 'react-icons/fi';
 import Header from '../../components/layout/Header/Header';
 import OverviewCard from '../../components/layout/OverviewCard/OverviewCard';
@@ -33,8 +35,16 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [selectedOperationAccount, setSelectedOperationAccount] = useState(null);
   const [depositError, setDepositError] = useState('');
   const [withdrawError, setWithdrawError] = useState('');
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const INITIAL_TRANSACTIONS_COUNT = 10;
 
   const email = localStorage.getItem('email');
+
+  const displayedTransactions = showAllTransactions 
+    ? transactions 
+    : transactions.slice(0, INITIAL_TRANSACTIONS_COUNT);
+
+  const hasMoreTransactions = transactions.length > INITIAL_TRANSACTIONS_COUNT;
 
   // Загрузка данных
   useEffect(() => {
@@ -354,38 +364,54 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               {isLoading ? (
                 <div className={styles.loading}>Загрузка...</div>
               ) : transactions.length > 0 ? (
-                <div className={styles.tableWrapper}>
-                  <table className={styles.transfersTable}>
-                    <thead>
-                      <tr>
-                        <th className={styles.tableHeader}>Тип операции</th>
-                        <th className={styles.tableHeader}>Счет</th>
-                        <th className={styles.tableHeader}>Сумма</th>
-                        <th className={styles.tableHeader}>Дата</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((transaction, index) => (
-                        <tr key={index} className={styles.tableRow}>
-                          <td className={styles.tableCell} data-label="Тип операции">
-                            {transaction.transaction_type}
-                          </td>
-                          <td className={styles.tableCell} data-label="Счет">
-                            {transaction.transaction_type === 'Пополнение' ? transaction.to_account :
-                             transaction.transaction_type === 'Снятие' ? transaction.from_account :
-                             `${transaction.from_account} → ${transaction.to_account}`}
-                          </td>
-                          <td className={styles.tableCell} data-label="Сумма">
-                            {formatAmount(transaction.sum)} ₽
-                          </td>
-                          <td className={styles.tableCell} data-label="Дата">
-                            {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
-                          </td>
+                <>
+                  <div className={styles.tableWrapper}>
+                    <table className={styles.transfersTable}>
+                      <thead>
+                        <tr>
+                          <th className={styles.tableHeader}>Тип операции</th>
+                          <th className={styles.tableHeader}>Счет</th>
+                          <th className={styles.tableHeader}>Сумма</th>
+                          <th className={styles.tableHeader}>Дата</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {displayedTransactions.map((transaction, index) => (
+                          <tr key={index} className={styles.tableRow}>
+                            <td className={styles.tableCell} data-label="Тип операции">
+                              {transaction.transaction_type}
+                            </td>
+                            <td className={styles.tableCell} data-label="Счет">
+                              {transaction.transaction_type === 'Пополнение' ? transaction.to_account :
+                               transaction.transaction_type === 'Снятие' ? transaction.from_account :
+                               `${transaction.from_account} → ${transaction.to_account}`}
+                            </td>
+                            <td className={styles.tableCell} data-label="Сумма">
+                              {formatAmount(transaction.sum)} ₽
+                            </td>
+                            <td className={styles.tableCell} data-label="Дата">
+                              {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {hasMoreTransactions && (
+                    <div className={styles.showMoreContainer}>
+                      <button 
+                        className={styles.showMoreButton}
+                        onClick={() => setShowAllTransactions(!showAllTransactions)}
+                      >
+                        {showAllTransactions ? 'Показать меньше' : 'Показать больше'}
+                        {showAllTransactions ? 
+                          <FiChevronUp className={styles.showMoreIcon} /> : 
+                          <FiChevronDown className={styles.showMoreIcon} />
+                        }
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className={styles.noTransactions}>Нет операций</div>
               )}

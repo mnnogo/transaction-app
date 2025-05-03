@@ -1,4 +1,3 @@
-// === ИМПОРТЫ И НАСТРОЙКИ ===
 import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
@@ -74,7 +73,7 @@ app.get('/api/transactions', (req, res) => {
         FROM transactions t
         LEFT JOIN accounts a1 ON t.from_account = a1.account_id
         LEFT JOIN accounts a2 ON t.to_account = a2.account_id
-        JOIN users u ON u.user_id = COALESCE(a1.user_id, a2.user_id)
+        JOIN users u ON (a1.user_id = u.user_id OR a2.user_id = u.user_id)
         WHERE u.email = ?
         ORDER BY t.transaction_date DESC
     `;

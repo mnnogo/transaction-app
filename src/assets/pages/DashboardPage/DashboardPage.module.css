@@ -27,7 +27,7 @@
   flex: 1;
   display: flex;
   gap: 40px;
-  margin-top: 50px;
+  margin-top: 40px;
   margin-bottom: 20px;
 }
 
@@ -112,14 +112,17 @@
 }
 
 .transfersContainer {
-  overflow-x: auto;
-  margin-top: 15px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
 }
 
 .tableWrapper {
-  width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0;
 }
 
 .transfersTable {
@@ -627,42 +630,46 @@
   transition: all 0.2s ease;
 }
 
-.transfersContainer {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+.showMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 15px;
 }
 
-.tableWrapper {
-  overflow-x: auto;
-}
-
-.transfersTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.tableHeader {
-  text-align: left;
-  padding: 12px;
+.showMoreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   color: #666;
+  font-size: 14px;
   font-weight: 500;
-  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.tableRow {
-  border-bottom: 1px solid #f0f0f0;
+.showMoreIcon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
 }
 
-.tableRow:last-child {
-  border-bottom: none;
+.showMoreButton:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  color: #495057;
 }
 
-.tableCell {
-  padding: 12px;
-  color: #333;
+.showMoreButton:hover .showMoreIcon {
+  transform: translateY(2px);
+}
+
+.showMoreButton:active {
+  transform: translateY(1px);
 }
 
 @media (max-width: 1200px) {
