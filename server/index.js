@@ -142,18 +142,51 @@ app.post('/api/transfer', (req, res) => {
         });
     }
 
-    if (fromAccountId === toAccountId) {
+    if (fromAccountId == toAccountId) {
         return res.status(400).json({ 
             error: 'Счет отправителя и счет получателя не могут быть одинаковыми' 
         });
     }
 
-    // проверяем что amount - число и больше 0
     if (isNaN(amount) || amount <= 0) {
         return res.status(400).json({ 
             error: 'Сумма перевода должна быть положительным числом' 
         });
     }
+
+    // ! требование с 1000000 рублей не выполняется, т.к. вместо снятия и пополнения реализован перевод денег
+    if (amount > 30000) {
+        return res.status(400).json({ 
+            error: 'Сумма перевода не должна превышать 30000р' 
+        });
+    }
+
+    db.get('SELECT user_id FROM accounts WHERE account_id = ?', [fromAccountId], (err, accountRow) => {
+        if (err || !accountRow) {
+            db.run('ROLLBACK');
+            return res.status(500).json({ error: 'Не удалось найти владельца счёта' });
+        }
+    
+        const userId = accountRow.user_id;
+
+        db.get(`
+            SELECT 1 FROM accounts 
+            WHERE user_id = ? AND type = 'Кредитный' AND current_balance < -20000
+            LIMIT 1
+        `, [userId], (err, row) => {
+            if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ error: 'Ошибка при проверке кредитного счёта' });
+            }
+    
+            if (row) {
+                db.run('ROLLBACK');
+                return res.status(403).json({
+                    error: 'Операция запрещена: у вас есть кредитный счёт с задолженностью более 20 000₽'
+                });
+            }
+        });
+    });
 
     try {
         db.run('BEGIN TRANSACTION');
@@ -225,4 +258,4 @@ app.post('/api/transfer', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту ${port}`);
-}); 
+});
