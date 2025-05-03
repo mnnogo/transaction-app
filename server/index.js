@@ -87,6 +87,7 @@ app.get('/api/accounts', (req, res) => {
         SELECT 
             a.account_id,
             a.account_name,
+            a.type,
             a.current_balance,
             a.income,
             a.expense
