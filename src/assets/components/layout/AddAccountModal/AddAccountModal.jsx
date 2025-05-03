@@ -15,15 +15,14 @@ const AddAccountModal = ({ onClose, onCreateAccount, isLoading }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/accounts', {
+      const response = await fetch('http://localhost:3000/api/accounts/add', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          account_name: accountName,
-          type: accountType,
+          accountName: accountName,
+          accountType: accountType == "Дебетовая карта" ? "Дебетовый" : "Кредитный",
           email: localStorage.getItem('email')
         })
       });
