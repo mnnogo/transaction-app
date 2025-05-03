@@ -33,6 +33,8 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [transactions, setTransactions] = useState([]);
   const [amount, setAmount] = useState('');
   const [selectedOperationAccount, setSelectedOperationAccount] = useState(null);
+  const [depositError, setDepositError] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
 
   const email = localStorage.getItem('email');
 
@@ -124,11 +126,12 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
   const handleDeposit = async () => {
     if (!amount || isNaN(amount)) {
-      alert('Введите корректную сумму');
+      setDepositError('Введите корректную сумму');
       return;
     }
 
     setIsLoading(true);
+    setDepositError('');
     try {
       const response = await fetch('http://localhost:3000/api/accounts/deposit', {
         method: 'POST',
@@ -149,7 +152,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       setAmount('');
     } catch (error) {
       console.error('Ошибка:', error);
-      alert(error.message);
+      setDepositError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -157,11 +160,12 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
   const handleWithdraw = async () => {
     if (!amount || isNaN(amount)) {
-      alert('Введите корректную сумму');
+      setWithdrawError('Введите корректную сумму');
       return;
     }
 
     setIsLoading(true);
+    setWithdrawError('');
     try {
       const response = await fetch('http://localhost:3000/api/accounts/withdraw', {
         method: 'POST',
@@ -175,14 +179,14 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Ошибка при зачислении средств');
+      if (!response.ok) throw new Error(data.error || 'Ошибка при снятии средств');
 
       await refreshData();
       setShowWithdrawModal(false);
       setAmount('');
     } catch (error) {
       console.error('Ошибка:', error);
-      alert(error.message);
+      setWithdrawError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -424,14 +428,21 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setDepositError('');
+                }}
                 placeholder="Введите сумму"
                 className={styles.amountInput}
               />
             </div>
+            {depositError && <div className={styles.errorMessage}>{depositError}</div>}
             <div className={styles.modalButtons}>
               <button 
-                onClick={() => setShowDepositModal(false)}
+                onClick={() => {
+                  setShowDepositModal(false);
+                  setDepositError('');
+                }}
                 className={styles.cancelButton}
               >
                 Отмена
@@ -472,14 +483,21 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setWithdrawError('');
+                }}
                 placeholder="Введите сумму"
                 className={styles.amountInput}
               />
             </div>
+            {withdrawError && <div className={styles.errorMessage}>{withdrawError}</div>}
             <div className={styles.modalButtons}>
               <button 
-                onClick={() => setShowWithdrawModal(false)}
+                onClick={() => {
+                  setShowWithdrawModal(false);
+                  setWithdrawError('');
+                }}
                 className={styles.cancelButton}
               >
                 Отмена
