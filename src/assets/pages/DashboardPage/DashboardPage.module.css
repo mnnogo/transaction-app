@@ -1,5 +1,5 @@
 .dashboard {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px 40px;
   min-height: calc(100vh - 120px); /* Увеличено с 100px */
