@@ -314,7 +314,7 @@ app.post('/api/accounts/deposit', (req, res) => {
                                 db.run('ROLLBACK');
                                 return res.status(500).json({ error: 'Ошибка при записи транзакции' });
                             }
-                            
+
                             db.run('COMMIT');
                             return res.status(200).json({ message: 'Счет успешно пополнен' });
                         }
@@ -354,17 +354,17 @@ app.post('/api/accounts/withdraw', (req, res) => {
                 return res.status(404).json({ error: 'Счет не найден' });
             }
 
-            if (account.type === 'Дебетовый' && account.current_balance < amount) {
+            if (account.type === 'debit' && account.current_balance < amount) {
                 db.run('ROLLBACK');
                 return res.status(400).json({ error: 'Недостаточно средств на счете' });
             }
 
-            if (account.type === 'Кредитный' && (account.current_balance - amount) < -100000) {
+            if (account.type === 'credit' && (account.current_balance - amount) < -100000) {
                 db.run('ROLLBACK');
                 return res.status(400).json({ error: 'Превышен лимит кредитного счета' });
             }
 
-            if (account.type === 'Дебетовый') {
+            if (account.type === 'debit') {
                 hasProblematicCreditAccount(account.user_id, (err, hasBadCredit) => {
                     if (err) {
                         db.run('ROLLBACK');
