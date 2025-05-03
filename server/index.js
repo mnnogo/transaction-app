@@ -306,9 +306,9 @@ app.post('/api/accounts/deposit', (req, res) => {
                     }
 
                     db.run(
-                        `INSERT INTO transactions (from_account, to_account, sum, transaction_date, type)
-                         VALUES (?, ?, ?, ?, ?)`,
-                        [null, accountId, amount, new Date().toISOString(), 'deposit'],
+                        `INSERT INTO transactions (from_account, to_account, sum, transaction_date)
+                         VALUES (?, ?, ?, ?)`,
+                        [null, accountId, amount, new Date().toISOString()],
                         function (err) {
                             if (err) {
                                 db.run('ROLLBACK');
@@ -418,9 +418,9 @@ app.post('/api/accounts/withdraw', (req, res) => {
                 }
 
                 db.run(
-                    `INSERT INTO transactions (from_account, to_account, sum, transaction_date, type)
-                     VALUES (?, ?, ?, ?, ?)`,
-                    [accountId, null, amount, new Date().toISOString(), 'withdrawal'],
+                    `INSERT INTO transactions (from_account, to_account, sum, transaction_date)
+                     VALUES (?, ?, ?, ?)`,
+                    [accountId, null, amount, new Date().toISOString()],
                     function (err) {
                         if (err) {
                             db.run('ROLLBACK');

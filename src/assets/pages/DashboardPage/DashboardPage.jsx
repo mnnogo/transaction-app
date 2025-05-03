@@ -43,6 +43,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         
         const formattedAccounts = accounts.map(account => ({
           accountId: account.account_id,
+          type: account.type,
           name: account.account_name,
           balance: account.current_balance,
           income: account.income,
@@ -80,6 +81,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       
       const formattedAccounts = accounts.map(account => ({
         accountId: account.account_id,
+        type: account.type,
         name: account.account_name,
         balance: account.current_balance,
         income: account.income,
@@ -128,18 +130,16 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       const response = await fetch('http://localhost:3000/api/accounts/deposit', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          account_id: selectedOperationAccount,
+          accountId: selectedOperationAccount,
           amount: parseFloat(amount)
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Ошибка при зачислении средств');
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Ошибка при зачислении средств');
 
       await refreshData();
       setShowDepositModal(false);
@@ -163,18 +163,16 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       const response = await fetch('http://localhost:3000/api/accounts/withdraw', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          account_id: selectedOperationAccount,
+          accountId: selectedOperationAccount,
           amount: parseFloat(amount)
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Ошибка при снятии средств');
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Ошибка при зачислении средств');
 
       await refreshData();
       setShowWithdrawModal(false);
@@ -265,6 +263,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               {accountsData.map((account) => (
                 <AccountCard
                   key={account.accountId}
+                  type={account.type}
                   accountId={account.accountId}
                   name={account.name}
                   balance={formatAmount(account.balance)}
