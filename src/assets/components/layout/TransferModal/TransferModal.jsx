@@ -24,8 +24,18 @@ const TransferModal = ({ onClose, accounts, selectedAccount, onTransferSuccess, 
     }
 
     const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      setError('Введите корректную сумму');
+    if (isNaN(amount)) {
+      setError('Введите корректное значение');
+      return;
+    }
+
+    if (amount < 10) {
+      setError('Минимальная сумма перевода - 10.00 рублей');
+      return;
+    }
+
+    if (amount > 30000) {
+      setError('Максимальная сумма перевода - 30,000.00 рублей');
       return;
     }
 
@@ -63,12 +73,14 @@ const TransferModal = ({ onClose, accounts, selectedAccount, onTransferSuccess, 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (error) setError('');
   };
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContainer}>
-        <form onSubmit={handleSubmit} className={styles.transferForm}>
+        <form onSubmit={handleSubmit} className={styles.transferForm} noValidate>
           <h2>Перевод средств</h2>
           
           <div className={styles.formGroup}>
@@ -110,12 +122,15 @@ const TransferModal = ({ onClose, accounts, selectedAccount, onTransferSuccess, 
               name="amount"
               value={formData.amount}
               onChange={handleChange}
-              min="0.01"
+              min="10.01"
               step="0.01"
               required
               disabled={isSubmitting || isLoading}
               className={styles.amountInput}
             />
+            <div className={styles.amountHint}>
+              Допустимый диапазон: 10.01 - 29,999.99 ₽
+            </div>
           </div>
 
           {error && <div className={styles.errorMessage}>{error}</div>}
