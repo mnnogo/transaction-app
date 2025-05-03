@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FiEye,
   FiEyeOff,
-  FiPlus,
   FiArrowLeft,
   FiDollarSign,
   FiRefreshCw
@@ -108,26 +107,28 @@ const DashboardPage = ({ setIsAuthenticated }) => {
     }) : '******';
   };
 
-  const balanceData = selectedAccount 
+  const totalBalanceData = [
+    { 
+      title: 'Общий баланс', 
+      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
+    },
+    { 
+      title: 'Общие доходы', 
+      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
+    },
+    { 
+      title: 'Общие расходы', 
+      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
+    }
+  ];
+
+  const accountBalanceData = selectedAccount 
     ? [
         { title: 'Баланс', amount: formatAmount(selectedAccount.balance) },
         { title: 'Доходы', amount: formatAmount(selectedAccount.income) },
         { title: 'Расходы', amount: formatAmount(selectedAccount.expenses) }
       ]
-    : [
-        { 
-          title: 'Общий баланс', 
-          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
-        },
-        { 
-          title: 'Общие доходы', 
-          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
-        },
-        { 
-          title: 'Общие расходы', 
-          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
-        }
-      ];
+    : [];
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -183,7 +184,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         <div className={styles.leftColumn}>
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
+              <h2>Общие показатели</h2>
               <div className={styles.actions}>
                 <button 
                   className={styles.eyeButton}
@@ -194,9 +195,9 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               </div>
             </div>
             <div className={styles.balanceGrid}>
-              {balanceData.map((item, index) => (
+              {totalBalanceData.map((item, index) => (
                 <OverviewCard 
-                  key={index}
+                  key={`total-${index}`}
                   title={item.title}
                   amount={item.amount}
                 />
@@ -204,10 +205,26 @@ const DashboardPage = ({ setIsAuthenticated }) => {
             </div>
           </section>
 
+          {selectedAccount && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2>{selectedAccount.name}</h2>
+              </div>
+              <div className={styles.balanceGrid}>
+                {accountBalanceData.map((item, index) => (
+                  <OverviewCard 
+                    key={`account-${index}`}
+                    title={item.title}
+                    amount={item.amount}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>Мои счета</h2>
-              
             </div>
             <div className={styles.accountsGrid}>
               {accountsData.map((account) => (
