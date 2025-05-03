@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FiEye,
   FiEyeOff,
+  FiPlus,
   FiArrowLeft,
   FiDollarSign,
   FiRefreshCw
@@ -11,11 +12,13 @@ import Header from '../../components/layout/Header/Header';
 import OverviewCard from '../../components/layout/OverviewCard/OverviewCard';
 import AccountCard from '../../components/layout/AccountCard/AccountCard';
 import TransferModal from '../../components/layout/TransferModal/TransferModal';
+import AddAccountModal from '../../components/layout/AddAccountModal/AddAccountModal';
 import styles from './DashboardPage.module.css';
 
 const DashboardPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +39,6 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         const formattedAccounts = accounts.map(account => ({
           accountId: account.account_id,
           name: account.account_name,
-          type: account.type,
           balance: account.current_balance,
           income: account.income,
           expenses: account.expense
@@ -74,7 +76,6 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       const formattedAccounts = accounts.map(account => ({
         accountId: account.account_id,
         name: account.account_name,
-        type: account.type,
         balance: account.current_balance,
         income: account.income,
         expenses: account.expense
@@ -82,7 +83,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       
       setAccountsData(formattedAccounts);
 
-      // Обновляем выбранный счет, если он еще существует
+      // Обновляем выбранный счет
       if (selectedAccount) {
         const updatedSelectedAccount = formattedAccounts.find(
           acc => acc.accountId === selectedAccount.accountId
@@ -98,6 +99,11 @@ const DashboardPage = ({ setIsAuthenticated }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddAccountSuccess = async () => {
+    await refreshData();
+    setShowAddAccountModal(false);
   };
 
   const formatAmount = (amount) => {
@@ -107,28 +113,26 @@ const DashboardPage = ({ setIsAuthenticated }) => {
     }) : '******';
   };
 
-  const totalBalanceData = [
-    { 
-      title: 'Общий баланс', 
-      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
-    },
-    { 
-      title: 'Общие доходы', 
-      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
-    },
-    { 
-      title: 'Общие расходы', 
-      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
-    }
-  ];
-
-  const accountBalanceData = selectedAccount 
+  const balanceData = selectedAccount 
     ? [
         { title: 'Баланс', amount: formatAmount(selectedAccount.balance) },
         { title: 'Доходы', amount: formatAmount(selectedAccount.income) },
         { title: 'Расходы', amount: formatAmount(selectedAccount.expenses) }
       ]
-    : [];
+    : [
+        { 
+          title: 'Общий баланс', 
+          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
+        },
+        { 
+          title: 'Общие доходы', 
+          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
+        },
+        { 
+          title: 'Общие расходы', 
+          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
+        }
+      ];
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -138,41 +142,8 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   };
 
   const handleTransferSuccess = async () => {
-    setIsLoading(true);
-    try {
-      // Обновляем данные счетов
-      const accountsResponse = await fetch(`http://localhost:3000/api/accounts?email=${email}`);
-      const accounts = await accountsResponse.json();
-      
-      const formattedAccounts = accounts.map(account => ({
-        accountId: account.account_id,
-        name: account.account_name,
-        type: account.type,
-        balance: account.current_balance,
-        income: account.income,
-        expenses: account.expense
-      }));
-      
-      setAccountsData(formattedAccounts);
-      
-      // Обновляем выбранный счет
-      if (selectedAccount) {
-        const updatedSelectedAccount = formattedAccounts.find(
-          acc => acc.accountId === selectedAccount.accountId
-        );
-        setSelectedAccount(updatedSelectedAccount || formattedAccounts[0]);
-      }
-
-      // Обновляем транзакции
-      const transactionsResponse = await fetch(`http://localhost:3000/api/transactions?email=${email}`);
-      const transactionsData = await transactionsResponse.json();
-      setTransactions(transactionsData);
-    } catch (error) {
-      console.error('Ошибка обновления данных:', error);
-    } finally {
-      setIsLoading(false);
-      setShowTransferModal(false);
-    }
+    await refreshData();
+    setShowTransferModal(false);
   };
 
   return (
@@ -184,7 +155,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         <div className={styles.leftColumn}>
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>Общие показатели</h2>
+              <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
               <div className={styles.actions}>
                 <button 
                   className={styles.eyeButton}
@@ -195,9 +166,9 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               </div>
             </div>
             <div className={styles.balanceGrid}>
-              {totalBalanceData.map((item, index) => (
+              {balanceData.map((item, index) => (
                 <OverviewCard 
-                  key={`total-${index}`}
+                  key={index}
                   title={item.title}
                   amount={item.amount}
                 />
@@ -205,26 +176,16 @@ const DashboardPage = ({ setIsAuthenticated }) => {
             </div>
           </section>
 
-          {selectedAccount && (
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h2>{selectedAccount.name}</h2>
-              </div>
-              <div className={styles.balanceGrid}>
-                {accountBalanceData.map((item, index) => (
-                  <OverviewCard 
-                    key={`account-${index}`}
-                    title={item.title}
-                    amount={item.amount}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>Мои счета</h2>
+              <button 
+                className={styles.addAccountButton}
+                onClick={() => setShowAddAccountModal(true)}
+                disabled={isLoading}
+              >
+                <FiPlus size={18} />
+              </button>
             </div>
             <div className={styles.accountsGrid}>
               {accountsData.map((account) => (
@@ -232,7 +193,6 @@ const DashboardPage = ({ setIsAuthenticated }) => {
                   key={account.accountId}
                   accountId={account.accountId}
                   name={account.name}
-                  type={account.type}
                   balance={formatAmount(account.balance)}
                   onClick={() => handleAccountClick(account)}
                   isSelected={selectedAccount?.accountId === account.accountId}
@@ -309,6 +269,14 @@ const DashboardPage = ({ setIsAuthenticated }) => {
           accounts={accountsData}
           selectedAccount={selectedAccount}
           onTransferSuccess={handleTransferSuccess}
+          isLoading={isLoading}
+        />
+      )}
+
+      {showAddAccountModal && (
+        <AddAccountModal 
+          onClose={() => setShowAddAccountModal(false)}
+          onCreateAccount={handleAddAccountSuccess}
           isLoading={isLoading}
         />
       )}
