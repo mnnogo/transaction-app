@@ -35,7 +35,7 @@ function checkCreditAccountLimit(balance, amount) {
 function hasProblematicCreditAccount(userId, callback) {
     db.get(`
         SELECT 1 FROM accounts 
-        WHERE user_id = ? AND type = 'Кредитный' AND current_balance < -20000
+        WHERE user_id = ? AND type = 'credit' AND current_balance < -20000
         LIMIT 1
     `, [userId], (err, row) => {
         if (err) return callback(err, null);
@@ -114,7 +114,7 @@ app.post('/api/transfer', (req, res) => {
         return res.status(400).json({ error: 'Необходимо указать все параметры' });
     }
 
-    if (fromAccountId === toAccountId) {
+    if (fromAccountId == toAccountId) {
         return res.status(400).json({ error: 'Счет отправителя и получателя не могут быть одинаковыми' });
     }
 
@@ -134,14 +134,14 @@ app.post('/api/transfer', (req, res) => {
         const { type: senderType, current_balance: senderBalance, user_id: userId } = senderRow;
 
         // Проверяем баланс
-        if (senderType === 'Дебетовый' && checkDebitAccountBalance(senderBalance, amount)) {
+        if (senderType === 'debit' && checkDebitAccountBalance(senderBalance, amount)) {
             db.run('ROLLBACK');
             return res.status(400).json({ error: 'Недостаточно средств на дебетовом счёте' });
         }
 
-        if (senderType === 'Кредитный' && checkCreditAccountLimit(senderBalance, amount)) {
+        if (senderType === 'credit' && checkCreditAccountLimit(senderBalance, amount)) {
             db.run('ROLLBACK');
-            return res.status(400).json({ error: 'Превышен лимит кредитного счёта' });
+            return res.status(400).json({ error: 'Превышен лимит кредитного счёта (-100 000₽)' });
         }
 
         // Проверяем, что оба аккаунта существуют
@@ -156,9 +156,9 @@ app.post('/api/transfer', (req, res) => {
                     db.run('ROLLBACK');
                     return res.status(404).json({ error: 'Счет получателя не найден' });
                 }
-
+                
                 // Если отправитель - дебетовый счёт и получатель НЕ кредитный, проверяем ограничение
-                if (senderType === 'Дебетовый' && toAccount.type !== 'Кредитный') {
+                if (senderType === 'debit' && toAccount.type !== 'credit') {
                     hasProblematicCreditAccount(userId, (err, hasBadCredit) => {
                         if (err) {
                             db.run('ROLLBACK');
@@ -210,8 +210,8 @@ app.post('/api/accounts/add', (req, res) => {
         return res.status(400).json({ error: 'Необходимо указать email, название счёта и тип счёта' });
     }
 
-    if (!['Дебетовый', 'Кредитный'].includes(accountType)) {
-        return res.status(400).json({ error: 'Недопустимый тип счёта. Допустимые значения: Дебетовый, Кредитный' });
+    if (!['debit', 'credit'].includes(accountType)) {
+        return res.status(400).json({ error: 'Недопустимый тип счёта. Допустимые значения: debit, credit' });
     }
 
     db.run('BEGIN TRANSACTION');
@@ -289,7 +289,7 @@ app.post('/api/accounts/deposit', (req, res) => {
             }
 
             let bonus = 0;
-            if (account.type === 'Дебетовый' && amount > 1000000) {
+            if (account.type === 'debit' && amount > 1000000) {
                 bonus = 2000;
             }
 
@@ -308,35 +308,15 @@ app.post('/api/accounts/deposit', (req, res) => {
                     db.run(
                         `INSERT INTO transactions (from_account, to_account, sum, transaction_date)
                          VALUES (?, ?, ?, ?)`,
-                        [null, accountId, amount, new Date().toISOString()],
+                        [null, accountId, amount + bonus, new Date().toISOString()],
                         function (err) {
                             if (err) {
                                 db.run('ROLLBACK');
                                 return res.status(500).json({ error: 'Ошибка при записи транзакции' });
                             }
-
-                            if (bonus > 0) {
-                                db.run(
-                                    `INSERT INTO transactions (from_account, to_account, sum, transaction_date, type)
-                                     VALUES (?, ?, ?, ?, ?)`,
-                                    [null, accountId, bonus, new Date().toISOString(), 'bonus'],
-                                    function (err) {
-                                        if (err) {
-                                            db.run('ROLLBACK');
-                                            return res.status(500).json({ error: 'Ошибка при записи бонусной транзакции' });
-                                        }
-                                        db.run('COMMIT');
-                                        return res.status(200).json({ 
-                                            message: 'Счет успешно пополнен',
-                                            bonusApplied: bonus > 0,
-                                            bonusAmount: bonus
-                                        });
-                                    }
-                                );
-                            } else {
-                                db.run('COMMIT');
-                                return res.status(200).json({ message: 'Счет успешно пополнен' });
-                            }
+                            
+                            db.run('COMMIT');
+                            return res.status(200).json({ message: 'Счет успешно пополнен' });
                         }
                     );
                 }
