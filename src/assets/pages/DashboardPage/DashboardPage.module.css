@@ -314,3 +314,58 @@
     padding: 10px;
   }
 }
+/* Стили для кнопки добавления счета */
+.addAccountButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #27AE60;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+}
+
+.addAccountButton:hover {
+  background: #219653;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.4);
+}
+
+.addAccountButton:active {
+  transform: scale(0.95);
+}
+
+.addAccountButton:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.addAccountButton svg {
+  transition: transform 0.3s ease;
+}
+
+.addAccountButton:hover svg {
+  transform: rotate(90deg);
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+  .addAccountButton {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .addAccountButton {
+    width: 30px;
+    height: 30px;
+  }
+}
