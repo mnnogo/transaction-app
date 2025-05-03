@@ -122,10 +122,6 @@ app.post('/api/transfer', (req, res) => {
         return res.status(400).json({ error: 'Сумма должна быть положительным числом' });
     }
 
-    if (amount > 30000) {
-        return res.status(400).json({ error: 'Сумма перевода не должна превышать 30000₽' });
-    }
-
     db.run('BEGIN TRANSACTION');
 
     // получаем счёт отправителя
@@ -267,6 +263,178 @@ app.post('/api/accounts/add', (req, res) => {
     });
 });
 
+app.post('/api/accounts/deposit', (req, res) => {
+    const { accountId, amount } = req.body;
+
+    if (!accountId || amount === undefined || amount === null) {
+        return res.status(400).json({ error: 'Необходимо указать accountId и amount' });
+    }
+
+    if (isNaN(amount) || amount <= 0) {
+        return res.status(400).json({ error: 'Сумма должна быть положительным числом' });
+    }
+
+    db.run('BEGIN TRANSACTION');
+
+    db.get(
+        `SELECT a.*, u.email 
+         FROM accounts a
+         JOIN users u ON a.user_id = u.user_id
+         WHERE a.account_id = ?`,
+        [accountId],
+        (err, account) => {
+            if (err || !account) {
+                db.run('ROLLBACK');
+                return res.status(404).json({ error: 'Счет не найден' });
+            }
+
+            let bonus = 0;
+            if (account.type === 'Дебетовый' && amount > 1000000) {
+                bonus = 2000;
+            }
+
+            db.run(
+                `UPDATE accounts 
+                 SET current_balance = current_balance + ?,
+                     income = income + ?
+                 WHERE account_id = ?`,
+                [amount + bonus, amount + bonus, accountId],
+                function (err) {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ error: 'Ошибка при пополнении счета' });
+                    }
+
+                    db.run(
+                        `INSERT INTO transactions (from_account, to_account, sum, transaction_date, type)
+                         VALUES (?, ?, ?, ?, ?)`,
+                        [null, accountId, amount, new Date().toISOString(), 'deposit'],
+                        function (err) {
+                            if (err) {
+                                db.run('ROLLBACK');
+                                return res.status(500).json({ error: 'Ошибка при записи транзакции' });
+                            }
+
+                            if (bonus > 0) {
+                                db.run(
+                                    `INSERT INTO transactions (from_account, to_account, sum, transaction_date, type)
+                                     VALUES (?, ?, ?, ?, ?)`,
+                                    [null, accountId, bonus, new Date().toISOString(), 'bonus'],
+                                    function (err) {
+                                        if (err) {
+                                            db.run('ROLLBACK');
+                                            return res.status(500).json({ error: 'Ошибка при записи бонусной транзакции' });
+                                        }
+                                        db.run('COMMIT');
+                                        return res.status(200).json({ 
+                                            message: 'Счет успешно пополнен',
+                                            bonusApplied: bonus > 0,
+                                            bonusAmount: bonus
+                                        });
+                                    }
+                                );
+                            } else {
+                                db.run('COMMIT');
+                                return res.status(200).json({ message: 'Счет успешно пополнен' });
+                            }
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+app.post('/api/accounts/withdraw', (req, res) => {
+    const { accountId, amount } = req.body;
+
+    if (!accountId || amount === undefined || amount === null) {
+        return res.status(400).json({ error: 'Необходимо указать accountId и amount' });
+    }
+
+    if (isNaN(amount) || amount <= 0) {
+        return res.status(400).json({ error: 'Сумма должна быть положительным числом' });
+    }
+
+    if (amount > 30000) {
+        return res.status(400).json({ error: 'Нельзя снимать более 30 000 за одну операцию' });
+    }
+
+    db.run('BEGIN TRANSACTION');
+
+    db.get(
+        `SELECT a.*, u.user_id 
+         FROM accounts a
+         JOIN users u ON a.user_id = u.user_id
+         WHERE a.account_id = ?`,
+        [accountId],
+        (err, account) => {
+            if (err || !account) {
+                db.run('ROLLBACK');
+                return res.status(404).json({ error: 'Счет не найден' });
+            }
+
+            if (account.type === 'Дебетовый' && account.current_balance < amount) {
+                db.run('ROLLBACK');
+                return res.status(400).json({ error: 'Недостаточно средств на счете' });
+            }
+
+            if (account.type === 'Кредитный' && (account.current_balance - amount) < -100000) {
+                db.run('ROLLBACK');
+                return res.status(400).json({ error: 'Превышен лимит кредитного счета' });
+            }
+
+            if (account.type === 'Дебетовый') {
+                hasProblematicCreditAccount(account.user_id, (err, hasBadCredit) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ error: 'Ошибка при проверке кредитных счетов' });
+                    }
+                    if (hasBadCredit) {
+                        db.run('ROLLBACK');
+                        return res.status(403).json({
+                            error: 'Операция запрещена: у вас есть кредитный счёт с задолженностью более 20 000₽'
+                        });
+                    }
+                    performWithdrawal();
+                });
+            } else {
+                performWithdrawal();
+            }
+        }
+    );
+
+    function performWithdrawal() {
+        db.run(
+            `UPDATE accounts 
+             SET current_balance = current_balance - ?,
+                 expense = expense + ?
+             WHERE account_id = ?`,
+            [amount, amount, accountId],
+            function (err) {
+                if (err) {
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: 'Ошибка при снятии средств' });
+                }
+
+                db.run(
+                    `INSERT INTO transactions (from_account, to_account, sum, transaction_date, type)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [accountId, null, amount, new Date().toISOString(), 'withdrawal'],
+                    function (err) {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: 'Ошибка при записи транзакции' });
+                        }
+
+                        db.run('COMMIT');
+                        return res.status(200).json({ message: 'Средства успешно сняты' });
+                    }
+                );
+            }
+        );
+    }
+});
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту ${port}`);
