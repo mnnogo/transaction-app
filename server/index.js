@@ -1,4 +1,3 @@
-// === ИМПОРТЫ И НАСТРОЙКИ ===
 import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
@@ -61,11 +60,20 @@ app.get('/api/transactions', (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email не указан' });
 
     const sql = `
-        SELECT t.from_account, t.to_account, t.transaction_date, t.sum
+        SELECT 
+            t.from_account,
+            t.to_account,
+            t.transaction_date,
+            t.sum,
+            CASE 
+                WHEN t.from_account IS NULL THEN 'Пополнение'
+                WHEN t.to_account IS NULL THEN 'Снятие'
+                ELSE 'Перевод'
+            END as transaction_type
         FROM transactions t
-        JOIN accounts a1 ON t.from_account = a1.account_id
-        JOIN accounts a2 ON t.to_account = a2.account_id
-        JOIN users u ON u.user_id = a1.user_id OR u.user_id = a2.user_id
+        LEFT JOIN accounts a1 ON t.from_account = a1.account_id
+        LEFT JOIN accounts a2 ON t.to_account = a2.account_id
+        JOIN users u ON (a1.user_id = u.user_id OR a2.user_id = u.user_id)
         WHERE u.email = ?
         ORDER BY t.transaction_date DESC
     `;
@@ -277,7 +285,7 @@ app.post('/api/accounts/deposit', (req, res) => {
     db.run('BEGIN TRANSACTION');
 
     db.get(
-        `SELECT a.*, u.email 
+        `SELECT a.*, u.user_id 
          FROM accounts a
          JOIN users u ON a.user_id = u.user_id
          WHERE a.account_id = ?`,
@@ -288,41 +296,61 @@ app.post('/api/accounts/deposit', (req, res) => {
                 return res.status(404).json({ error: 'Счет не найден' });
             }
 
-            let bonus = 0;
-            if (account.type === 'debit' && amount > 1000000) {
-                bonus = 2000;
-            }
-
-            db.run(
-                `UPDATE accounts 
-                 SET current_balance = current_balance + ?,
-                     income = income + ?
-                 WHERE account_id = ?`,
-                [amount + bonus, amount + bonus, accountId],
-                function (err) {
+            if (account.type === 'debit') {
+                hasProblematicCreditAccount(account.user_id, (err, hasBadCredit) => {
                     if (err) {
                         db.run('ROLLBACK');
-                        return res.status(500).json({ error: 'Ошибка при пополнении счета' });
+                        return res.status(500).json({ error: 'Ошибка при проверке кредитных счетов' });
                     }
-
-                    db.run(
-                        `INSERT INTO transactions (from_account, to_account, sum, transaction_date)
-                         VALUES (?, ?, ?, ?)`,
-                        [null, accountId, amount + bonus, new Date().toISOString()],
-                        function (err) {
-                            if (err) {
-                                db.run('ROLLBACK');
-                                return res.status(500).json({ error: 'Ошибка при записи транзакции' });
-                            }
-                            
-                            db.run('COMMIT');
-                            return res.status(200).json({ message: 'Счет успешно пополнен' });
-                        }
-                    );
-                }
-            );
+                    if (hasBadCredit) {
+                        db.run('ROLLBACK');
+                        return res.status(403).json({
+                            error: 'Операция запрещена: у вас есть кредитный счёт с задолженностью более 20 000₽'
+                        });
+                    }
+                    performDeposit(account);
+                });
+            } else {
+                performDeposit(account);
+            }
         }
     );
+
+    function performDeposit(account) {
+        let bonus = 0;
+        if (account.type === 'debit' && amount > 1000000) {
+            bonus = 2000;
+        }
+
+        db.run(
+            `UPDATE accounts 
+             SET current_balance = current_balance + ?,
+                 income = income + ?
+             WHERE account_id = ?`,
+            [amount + bonus, amount + bonus, accountId],
+            function (err) {
+                if (err) {
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: 'Ошибка при пополнении счета' });
+                }
+
+                db.run(
+                    `INSERT INTO transactions (from_account, to_account, sum, transaction_date)
+                     VALUES (?, ?, ?, ?)`,
+                    [null, accountId, amount + bonus, new Date().toISOString()],
+                    function (err) {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: 'Ошибка при записи транзакции' });
+                        }
+
+                        db.run('COMMIT');
+                        return res.status(200).json({ message: 'Счет успешно пополнен' });
+                    }
+                );
+            }
+        );
+    }
 });
 
 app.post('/api/accounts/withdraw', (req, res) => {
@@ -354,17 +382,17 @@ app.post('/api/accounts/withdraw', (req, res) => {
                 return res.status(404).json({ error: 'Счет не найден' });
             }
 
-            if (account.type === 'Дебетовый' && account.current_balance < amount) {
+            if (account.type === 'debit' && account.current_balance < amount) {
                 db.run('ROLLBACK');
                 return res.status(400).json({ error: 'Недостаточно средств на счете' });
             }
 
-            if (account.type === 'Кредитный' && (account.current_balance - amount) < -100000) {
+            if (account.type === 'credit' && (account.current_balance - amount) < -100000) {
                 db.run('ROLLBACK');
                 return res.status(400).json({ error: 'Превышен лимит кредитного счета' });
             }
 
-            if (account.type === 'Дебетовый') {
+            if (account.type === 'debit') {
                 hasProblematicCreditAccount(account.user_id, (err, hasBadCredit) => {
                     if (err) {
                         db.run('ROLLBACK');

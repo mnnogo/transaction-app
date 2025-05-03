@@ -8,7 +8,9 @@ import {
   FiDollarSign,
   FiRefreshCw,
   FiTrendingUp,
-  FiTrendingDown
+  FiTrendingDown,
+  FiChevronDown,
+  FiChevronUp
 } from 'react-icons/fi';
 import Header from '../../components/layout/Header/Header';
 import OverviewCard from '../../components/layout/OverviewCard/OverviewCard';
@@ -31,8 +33,18 @@ const DashboardPage = ({ setIsAuthenticated }) => {
   const [transactions, setTransactions] = useState([]);
   const [amount, setAmount] = useState('');
   const [selectedOperationAccount, setSelectedOperationAccount] = useState(null);
+  const [depositError, setDepositError] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const INITIAL_TRANSACTIONS_COUNT = 10;
 
   const email = localStorage.getItem('email');
+
+  const displayedTransactions = showAllTransactions 
+    ? transactions 
+    : transactions.slice(0, INITIAL_TRANSACTIONS_COUNT);
+
+  const hasMoreTransactions = transactions.length > INITIAL_TRANSACTIONS_COUNT;
 
   // Загрузка данных
   useEffect(() => {
@@ -122,11 +134,12 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
   const handleDeposit = async () => {
     if (!amount || isNaN(amount)) {
-      alert('Введите корректную сумму');
+      setDepositError('Введите корректную сумму');
       return;
     }
 
     setIsLoading(true);
+    setDepositError('');
     try {
       const response = await fetch('http://localhost:3000/api/accounts/deposit', {
         method: 'POST',
@@ -147,7 +160,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       setAmount('');
     } catch (error) {
       console.error('Ошибка:', error);
-      alert(error.message);
+      setDepositError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -155,11 +168,12 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
   const handleWithdraw = async () => {
     if (!amount || isNaN(amount)) {
-      alert('Введите корректную сумму');
+      setWithdrawError('Введите корректную сумму');
       return;
     }
 
     setIsLoading(true);
+    setWithdrawError('');
     try {
       const response = await fetch('http://localhost:3000/api/accounts/withdraw', {
         method: 'POST',
@@ -173,14 +187,14 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Ошибка при зачислении средств');
+      if (!response.ok) throw new Error(data.error || 'Ошибка при снятии средств');
 
       await refreshData();
       setShowWithdrawModal(false);
       setAmount('');
     } catch (error) {
       console.error('Ошибка:', error);
-      alert(error.message);
+      setWithdrawError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -344,44 +358,60 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>История переводов</h2>
+              <h2>История операций</h2>
             </div>
             <div className={styles.transfersContainer}>
               {isLoading ? (
                 <div className={styles.loading}>Загрузка...</div>
               ) : transactions.length > 0 ? (
-                <div className={styles.tableWrapper}>
-                  <table className={styles.transfersTable}>
-                    <thead>
-                      <tr>
-                        <th className={styles.tableHeader}>Отправитель</th>
-                        <th className={styles.tableHeader}></th>
-                        <th className={styles.tableHeader}>Получатель</th>
-                        <th className={styles.tableHeader}>Сумма</th>
-                        <th className={styles.tableHeader}>Дата</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((transaction, index) => (
-                        <tr key={index} className={styles.tableRow}>
-                          <td className={styles.tableCell} data-label="Отправитель">
-                            {transaction.from_account}
-                          </td>
-                          <td className={styles.arrowCell}>→</td>
-                          <td className={styles.tableCell} data-label="Получатель">
-                            {transaction.to_account}
-                          </td>
-                          <td className={styles.tableCell} data-label="Сумма">
-                            {formatAmount(transaction.sum)} ₽
-                          </td>
-                          <td className={styles.tableCell} data-label="Дата">
-                            {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
-                          </td>
+                <>
+                  <div className={styles.tableWrapper}>
+                    <table className={styles.transfersTable}>
+                      <thead>
+                        <tr>
+                          <th className={styles.tableHeader}>Тип операции</th>
+                          <th className={styles.tableHeader}>Счет</th>
+                          <th className={styles.tableHeader}>Сумма</th>
+                          <th className={styles.tableHeader}>Дата</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {displayedTransactions.map((transaction, index) => (
+                          <tr key={index} className={styles.tableRow}>
+                            <td className={styles.tableCell} data-label="Тип операции">
+                              {transaction.transaction_type}
+                            </td>
+                            <td className={styles.tableCell} data-label="Счет">
+                              {transaction.transaction_type === 'Пополнение' ? transaction.to_account :
+                               transaction.transaction_type === 'Снятие' ? transaction.from_account :
+                               `${transaction.from_account} → ${transaction.to_account}`}
+                            </td>
+                            <td className={styles.tableCell} data-label="Сумма">
+                              {formatAmount(transaction.sum)} ₽
+                            </td>
+                            <td className={styles.tableCell} data-label="Дата">
+                              {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {hasMoreTransactions && (
+                    <div className={styles.showMoreContainer}>
+                      <button 
+                        className={styles.showMoreButton}
+                        onClick={() => setShowAllTransactions(!showAllTransactions)}
+                      >
+                        {showAllTransactions ? 'Показать меньше' : 'Показать больше'}
+                        {showAllTransactions ? 
+                          <FiChevronUp className={styles.showMoreIcon} /> : 
+                          <FiChevronDown className={styles.showMoreIcon} />
+                        }
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className={styles.noTransactions}>Нет операций</div>
               )}
@@ -432,14 +462,21 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setDepositError('');
+                }}
                 placeholder="Введите сумму"
                 className={styles.amountInput}
               />
             </div>
+            {depositError && <div className={styles.errorMessage}>{depositError}</div>}
             <div className={styles.modalButtons}>
               <button 
-                onClick={() => setShowDepositModal(false)}
+                onClick={() => {
+                  setShowDepositModal(false);
+                  setDepositError('');
+                }}
                 className={styles.cancelButton}
               >
                 Отмена
@@ -480,14 +517,21 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setWithdrawError('');
+                }}
                 placeholder="Введите сумму"
                 className={styles.amountInput}
               />
             </div>
+            {withdrawError && <div className={styles.errorMessage}>{withdrawError}</div>}
             <div className={styles.modalButtons}>
               <button 
-                onClick={() => setShowWithdrawModal(false)}
+                onClick={() => {
+                  setShowWithdrawModal(false);
+                  setWithdrawError('');
+                }}
                 className={styles.cancelButton}
               >
                 Отмена

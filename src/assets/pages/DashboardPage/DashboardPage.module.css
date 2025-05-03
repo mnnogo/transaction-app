@@ -1,5 +1,5 @@
 .dashboard {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px 40px;
   min-height: calc(100vh - 120px); /* Увеличено с 100px */
@@ -13,7 +13,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 70px; /* Увеличено с 60px */
+  height: 70px; 
   background: #27AE60;
   z-index: 1000;
   display: flex;
@@ -27,13 +27,13 @@
   flex: 1;
   display: flex;
   gap: 40px;
-  margin-top: 90px; /* Увеличено с 80px - это основной отступ после topbar */
+  margin-top: 40px;
   margin-bottom: 20px;
 }
 
 
 .logo {
-  height: 40px;
+  height: 50px;
   width: auto;
 }
 
@@ -112,14 +112,17 @@
 }
 
 .transfersContainer {
-  overflow-x: auto;
-  margin-top: 15px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
 }
 
 .tableWrapper {
-  width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0;
 }
 
 .transfersTable {
@@ -397,8 +400,8 @@
   background: #cccccc;
   cursor: not-allowed;
 }
-/* Добавьте новые медиа-запросы для улучшенной адаптивности */
-@media (max-width: 1100px) {
+
+@media (max-width: 1300px) {
   .dashboard {
     padding: 20px 30px;
   }
@@ -415,7 +418,7 @@
 
 
 
-@media (max-width: 967px) {
+@media (max-width: 1100px) {
   .dashboard {
     padding: 20px;
   }
@@ -546,5 +549,138 @@
   .transferButton {
     font-size: 13px;
     padding: 10px;
+  }
+}
+
+.errorMessage {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.rightColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+  margin-left: 20px;
+}
+
+.operationButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.depositButton,
+.withdrawButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transferButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.refreshSection {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.refreshHistoryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 15px;
+}
+
+.showMoreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showMoreIcon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.showMoreButton:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+.showMoreButton:hover .showMoreIcon {
+  transform: translateY(2px);
+}
+
+.showMoreButton:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 1200px) {
+  .rightColumn {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 992px) {
+  .rightColumn {
+    max-width: 100%;
+    margin-left: 0;
   }
 }

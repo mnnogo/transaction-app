@@ -1,36 +1,66 @@
 .accountCard {
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
   cursor: pointer;
-  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
 }
 
 .accountCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.accountCard h3 {
-  margin: 0 0 10px 0;
-  color: #333;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.balance {
-  margin: 0;
-  font-size: 18px;
-  font-weight: bold;
-  color: #27AE60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .selected {
   border: 2px solid #27AE60;
-  background-color: rgba(39, 174, 96, 0.05);
-  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.1);
+  background-color: #f8fff9;
+}
+
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.accountHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.accountName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.accountType {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #e8f5e9;
+  color: #27AE60;
+}
+
+.accountType.credit {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.accountNumber {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.balance {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-top: 4px;
 }
 
 /* Адаптивность */

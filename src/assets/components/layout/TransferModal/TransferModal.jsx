@@ -119,7 +119,7 @@ const TransferModal = ({ onClose, accounts, selectedAccount, onTransferSuccess, 
               className={styles.amountInput}
             />
             <div className={styles.amountHint}>
-              Допустимый диапазон: 10.01 - 29,999.99 ₽
+              Минимальная сумма перевода: 10.01 ₽
             </div>
           </div>
 
