@@ -13,7 +13,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 70px; /* Увеличено с 60px */
+  height: 70px; 
   background: #27AE60;
   z-index: 1000;
   display: flex;
@@ -27,13 +27,13 @@
   flex: 1;
   display: flex;
   gap: 40px;
-  margin-top: 90px; /* Увеличено с 80px - это основной отступ после topbar */
+  margin-top: 50px;
   margin-bottom: 20px;
 }
 
 
 .logo {
-  height: 40px;
+  height: 50px;
   width: auto;
 }
 
