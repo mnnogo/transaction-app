@@ -148,86 +148,60 @@ app.post('/api/transfer', (req, res) => {
             return res.status(400).json({ error: 'Превышен лимит кредитного счёта' });
         }
 
-        // Проверяем ограничение для дебетового счёта
-        if (senderType === 'Дебетовый') {
-            hasProblematicCreditAccount(userId, (err, hasBadCredit) => {
-                if (err) {
+        // Проверяем, что оба аккаунта существуют
+        db.get('SELECT 1 FROM accounts WHERE account_id = ?', [fromAccountId], (err, fromExists) => {
+            if (err || !fromExists) {
+                db.run('ROLLBACK');
+                return res.status(404).json({ error: 'Счет отправителя не найден' });
+            }
+
+            db.get('SELECT type FROM accounts WHERE account_id = ?', [toAccountId], (err, toAccount) => {
+                if (err || !toAccount) {
                     db.run('ROLLBACK');
-                    return res.status(500).json({ error: 'Ошибка при проверке кредитного счёта' });
-                }
-                if (hasBadCredit) {
-                    db.run('ROLLBACK');
-                    return res.status(403).json({
-                        error: 'Операция запрещена: у вас есть кредитный счёт с задолженностью более 20 000₽'
-                    });
+                    return res.status(404).json({ error: 'Счет получателя не найден' });
                 }
 
-                // Проверяем, что оба аккаунта существуют
-                db.get('SELECT 1 FROM accounts WHERE account_id = ?', [fromAccountId], (err, fromExists) => {
-                    if (err || !fromExists) {
-                        db.run('ROLLBACK');
-                        return res.status(404).json({ error: 'Счет отправителя не найден' });
-                    }
-
-                    db.get('SELECT 1 FROM accounts WHERE account_id = ?', [toAccountId], (err, toExists) => {
-                        if (err || !toExists) {
+                // Если отправитель - дебетовый счёт и получатель НЕ кредитный, проверяем ограничение
+                if (senderType === 'Дебетовый' && toAccount.type !== 'Кредитный') {
+                    hasProblematicCreditAccount(userId, (err, hasBadCredit) => {
+                        if (err) {
                             db.run('ROLLBACK');
-                            return res.status(404).json({ error: 'Счет получателя не найден' });
+                            return res.status(500).json({ error: 'Ошибка при проверке кредитного счёта' });
                         }
-
-                        // Выполняем перевод
-                        db.run(
-                            'INSERT INTO transactions (from_account, to_account, sum, transaction_date) VALUES (?, ?, ?, ?)',
-                            [fromAccountId, toAccountId, amount, new Date().toISOString()],
-                            function (err) {
-                                if (err) {
-                                    db.run('ROLLBACK');
-                                    return res.status(500).json({ error: 'Ошибка при создании перевода' });
-                                }
-
-                                db.run('UPDATE accounts SET current_balance = current_balance - ?, expense = expense + ? WHERE account_id = ?', [amount, amount, fromAccountId]);
-                                db.run('UPDATE accounts SET current_balance = current_balance + ?, income = income + ? WHERE account_id = ?', [amount, amount, toAccountId]);
-
-                                db.run('COMMIT');
-                                return res.status(200).json({ message: 'Перевод выполнен успешно' });
-                            }
-                        );
+                        if (hasBadCredit) {
+                            db.run('ROLLBACK');
+                            return res.status(403).json({
+                                error: 'Операция запрещена: у вас есть кредитный счёт с задолженностью более 20 000₽'
+                            });
+                        }
+                        performTransfer();
                     });
-                });
-            });
-        } else {
-            // Для кредитного счёта: проверяем существование
-            db.get('SELECT 1 FROM accounts WHERE account_id = ?', [fromAccountId], (err, fromExists) => {
-                if (err || !fromExists) {
-                    db.run('ROLLBACK');
-                    return res.status(404).json({ error: 'Счет отправителя не найден' });
+                } else {
+                    performTransfer();
                 }
+            });
+        });
 
-                db.get('SELECT 1 FROM accounts WHERE account_id = ?', [toAccountId], (err, toExists) => {
-                    if (err || !toExists) {
+        function performTransfer() {
+            // Выполняем перевод
+            db.run(
+                'INSERT INTO transactions (from_account, to_account, sum, transaction_date) VALUES (?, ?, ?, ?)',
+                [fromAccountId, toAccountId, amount, new Date().toISOString()],
+                function (err) {
+                    if (err) {
                         db.run('ROLLBACK');
-                        return res.status(404).json({ error: 'Счет получателя не найден' });
+                        return res.status(500).json({ error: 'Ошибка при создании перевода' });
                     }
 
-                    // Выполняем перевод
-                    db.run(
-                        'INSERT INTO transactions (from_account, to_account, sum, transaction_date) VALUES (?, ?, ?, ?)',
-                        [fromAccountId, toAccountId, amount, new Date().toISOString()],
-                        function (err) {
-                            if (err) {
-                                db.run('ROLLBACK');
-                                return res.status(500).json({ error: 'Ошибка при создании перевода' });
-                            }
+                    db.run('UPDATE accounts SET current_balance = current_balance - ?, expense = expense + ? WHERE account_id = ?', 
+                        [amount, amount, fromAccountId]);
+                    db.run('UPDATE accounts SET current_balance = current_balance + ?, income = income + ? WHERE account_id = ?', 
+                        [amount, amount, toAccountId]);
 
-                            db.run('UPDATE accounts SET current_balance = current_balance - ?, expense = expense + ? WHERE account_id = ?', [amount, amount, fromAccountId]);
-                            db.run('UPDATE accounts SET current_balance = current_balance + ?, income = income + ? WHERE account_id = ?', [amount, amount, toAccountId]);
-
-                            db.run('COMMIT');
-                            return res.status(200).json({ message: 'Перевод выполнен успешно' });
-                        }
-                    );
-                });
-            });
+                    db.run('COMMIT');
+                    return res.status(200).json({ message: 'Перевод выполнен успешно' });
+                }
+            );
         }
     });
 });
