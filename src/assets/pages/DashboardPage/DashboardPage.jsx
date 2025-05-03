@@ -348,7 +348,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>История переводов</h2>
+              <h2>История операций</h2>
             </div>
             <div className={styles.transfersContainer}>
               {isLoading ? (
@@ -358,9 +358,8 @@ const DashboardPage = ({ setIsAuthenticated }) => {
                   <table className={styles.transfersTable}>
                     <thead>
                       <tr>
-                        <th className={styles.tableHeader}>Отправитель</th>
-                        <th className={styles.tableHeader}></th>
-                        <th className={styles.tableHeader}>Получатель</th>
+                        <th className={styles.tableHeader}>Тип операции</th>
+                        <th className={styles.tableHeader}>Счет</th>
                         <th className={styles.tableHeader}>Сумма</th>
                         <th className={styles.tableHeader}>Дата</th>
                       </tr>
@@ -368,12 +367,13 @@ const DashboardPage = ({ setIsAuthenticated }) => {
                     <tbody>
                       {transactions.map((transaction, index) => (
                         <tr key={index} className={styles.tableRow}>
-                          <td className={styles.tableCell} data-label="Отправитель">
-                            {transaction.from_account}
+                          <td className={styles.tableCell} data-label="Тип операции">
+                            {transaction.transaction_type}
                           </td>
-                          <td className={styles.arrowCell}>→</td>
-                          <td className={styles.tableCell} data-label="Получатель">
-                            {transaction.to_account}
+                          <td className={styles.tableCell} data-label="Счет">
+                            {transaction.transaction_type === 'Пополнение' ? transaction.to_account :
+                             transaction.transaction_type === 'Снятие' ? transaction.from_account :
+                             `${transaction.from_account} → ${transaction.to_account}`}
                           </td>
                           <td className={styles.tableCell} data-label="Сумма">
                             {formatAmount(transaction.sum)} ₽

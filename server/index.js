@@ -61,11 +61,20 @@ app.get('/api/transactions', (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email не указан' });
 
     const sql = `
-        SELECT t.from_account, t.to_account, t.transaction_date, t.sum
+        SELECT 
+            t.from_account,
+            t.to_account,
+            t.transaction_date,
+            t.sum,
+            CASE 
+                WHEN t.from_account IS NULL THEN 'Пополнение'
+                WHEN t.to_account IS NULL THEN 'Снятие'
+                ELSE 'Перевод'
+            END as transaction_type
         FROM transactions t
-        JOIN accounts a1 ON t.from_account = a1.account_id
-        JOIN accounts a2 ON t.to_account = a2.account_id
-        JOIN users u ON u.user_id = a1.user_id OR u.user_id = a2.user_id
+        LEFT JOIN accounts a1 ON t.from_account = a1.account_id
+        LEFT JOIN accounts a2 ON t.to_account = a2.account_id
+        JOIN users u ON u.user_id = COALESCE(a1.user_id, a2.user_id)
         WHERE u.email = ?
         ORDER BY t.transaction_date DESC
     `;
