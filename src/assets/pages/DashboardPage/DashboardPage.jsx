@@ -16,9 +16,7 @@ import AccountCard from '../../components/layout/AccountCard/AccountCard';
 import TransferModal from '../../components/layout/TransferModal/TransferModal';
 import AddAccountModal from '../../components/layout/AddAccountModal/AddAccountModal';
 import styles from './DashboardPage.module.css';
-
-
-import MyIcon from './logo_white.svg';
+import logoWhite from './logo_white.svg';
 
 const DashboardPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
@@ -231,7 +229,9 @@ const DashboardPage = ({ setIsAuthenticated }) => {
 
   return (
     <div className={styles.dashboard}>
-      <div className={styles.topBar}></div>
+      <div className={styles.topBar}>
+        <img src={logoWhite} alt="Logo" className={styles.logo} />
+      </div>
       <Header onProfileClick={() => navigate('/profile')} />
       
       <main className={styles.main}>
@@ -358,21 +358,29 @@ const DashboardPage = ({ setIsAuthenticated }) => {
                   <table className={styles.transfersTable}>
                     <thead>
                       <tr>
-                        <th>Отправитель</th>
-                        <th></th>
-                        <th>Получатель</th>
-                        <th>Сумма</th>
-                        <th>Дата</th>
+                        <th className={styles.tableHeader}>Отправитель</th>
+                        <th className={styles.tableHeader}></th>
+                        <th className={styles.tableHeader}>Получатель</th>
+                        <th className={styles.tableHeader}>Сумма</th>
+                        <th className={styles.tableHeader}>Дата</th>
                       </tr>
                     </thead>
                     <tbody>
                       {transactions.map((transaction, index) => (
-                        <tr key={index}>
-                          <td data-label="Отправитель">{transaction.from_account}</td>
+                        <tr key={index} className={styles.tableRow}>
+                          <td className={styles.tableCell} data-label="Отправитель">
+                            {transaction.from_account}
+                          </td>
                           <td className={styles.arrowCell}>→</td>
-                          <td data-label="Получатель">{transaction.to_account}</td>
-                          <td data-label="Сумма">{formatAmount(transaction.sum)} ₽</td>
-                          <td data-label="Дата">{new Date(transaction.transaction_date).toLocaleDateString()}</td>
+                          <td className={styles.tableCell} data-label="Получатель">
+                            {transaction.to_account}
+                          </td>
+                          <td className={styles.tableCell} data-label="Сумма">
+                            {formatAmount(transaction.sum)} ₽
+                          </td>
+                          <td className={styles.tableCell} data-label="Дата">
+                            {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
