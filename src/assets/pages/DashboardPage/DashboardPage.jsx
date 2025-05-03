@@ -37,6 +37,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
         const formattedAccounts = accounts.map(account => ({
           accountId: account.account_id,
           name: account.account_name,
+          type: account.type,
           balance: account.current_balance,
           income: account.income,
           expenses: account.expense
@@ -74,6 +75,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       const formattedAccounts = accounts.map(account => ({
         accountId: account.account_id,
         name: account.account_name,
+        type: account.type,
         balance: account.current_balance,
         income: account.income,
         expenses: account.expense
@@ -144,6 +146,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       const formattedAccounts = accounts.map(account => ({
         accountId: account.account_id,
         name: account.account_name,
+        type: account.type,
         balance: account.current_balance,
         income: account.income,
         expenses: account.expense
@@ -212,6 +215,7 @@ const DashboardPage = ({ setIsAuthenticated }) => {
                   key={account.accountId}
                   accountId={account.accountId}
                   name={account.name}
+                  type={account.type}
                   balance={formatAmount(account.balance)}
                   onClick={() => handleAccountClick(account)}
                   isSelected={selectedAccount?.accountId === account.accountId}
