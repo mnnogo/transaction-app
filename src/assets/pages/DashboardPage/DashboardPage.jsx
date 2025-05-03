@@ -17,6 +17,9 @@ import TransferModal from '../../components/layout/TransferModal/TransferModal';
 import AddAccountModal from '../../components/layout/AddAccountModal/AddAccountModal';
 import styles from './DashboardPage.module.css';
 
+
+import MyIcon from './logo_white.svg';
+
 const DashboardPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -185,26 +188,30 @@ const DashboardPage = ({ setIsAuthenticated }) => {
     }
   };
 
-  const balanceData = selectedAccount 
+  // Данные для общего счета
+  const totalBalanceData = [
+    { 
+      title: 'Общий баланс', 
+      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
+    },
+    { 
+      title: 'Общие доходы', 
+      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
+    },
+    { 
+      title: 'Общие расходы', 
+      amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
+    }
+  ];
+
+  // Данные для выбранного счета
+  const accountBalanceData = selectedAccount 
     ? [
         { title: 'Баланс', amount: formatAmount(selectedAccount.balance) },
         { title: 'Доходы', amount: formatAmount(selectedAccount.income) },
         { title: 'Расходы', amount: formatAmount(selectedAccount.expenses) }
       ]
-    : [
-        { 
-          title: 'Общий баланс', 
-          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)) 
-        },
-        { 
-          title: 'Общие доходы', 
-          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.income), 0)) 
-        },
-        { 
-          title: 'Общие расходы', 
-          amount: formatAmount(accountsData.reduce((sum, acc) => sum + parseFloat(acc.expenses), 0)) 
-        }
-      ];
+    : [];
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -225,9 +232,10 @@ const DashboardPage = ({ setIsAuthenticated }) => {
       
       <main className={styles.main}>
         <div className={styles.leftColumn}>
+          {/* Секция общего счета */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>{selectedAccount ? `${selectedAccount.name}` : 'Общий вид'}</h2>
+              <h2>Общий счет</h2>
               <div className={styles.actions}>
                 <button 
                   className={styles.eyeButton}
@@ -238,9 +246,9 @@ const DashboardPage = ({ setIsAuthenticated }) => {
               </div>
             </div>
             <div className={styles.balanceGrid}>
-              {balanceData.map((item, index) => (
+              {totalBalanceData.map((item, index) => (
                 <OverviewCard 
-                  key={index}
+                  key={`total-${index}`}
                   title={item.title}
                   amount={item.amount}
                 />
@@ -248,6 +256,25 @@ const DashboardPage = ({ setIsAuthenticated }) => {
             </div>
           </section>
 
+          {/* Секция выбранного счета */}
+          {selectedAccount && (
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2>{selectedAccount.name}</h2>
+              </div>
+              <div className={styles.balanceGrid}>
+                {accountBalanceData.map((item, index) => (
+                  <OverviewCard 
+                    key={`account-${index}`}
+                    title={item.title}
+                    amount={item.amount}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Секция списка счетов */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2>Мои счета</h2>
